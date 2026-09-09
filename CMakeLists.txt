@@ -11,7 +11,7 @@
 #       that step is done.
 # ============================================================================
 
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.22...3.25)
 
 project(OpenUxAS
     VERSION   3.2.0
@@ -57,6 +57,10 @@ include(cmake/Dependencies.cmake)
 
 # ---- LMCP code-generation (builds LmcpGen, generates C++ from MDMs) ------
 include(cmake/LmcpGeneration.cmake)
+
+# ---- CTest integration (unit tests added in later milestones) -------------
+include(CTest)
+enable_testing()
 
 # ---- Source tree -----------------------------------------------------------
 add_subdirectory(src/cpp)
