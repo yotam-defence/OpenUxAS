@@ -63,7 +63,7 @@ target_link_libraries(uxas_common_includes INTERFACE
 # ============================================================================
 # uxas_visilibity -- Visibility algorithms
 # ============================================================================
-file(GLOB VISILIBITY_SOURCES
+file(GLOB VISILIBITY_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/VisilibityLib/*.cpp"
     "${UXAS_SRC_DIR}/VisilibityLib/*.h"
 )
@@ -77,7 +77,7 @@ target_link_libraries(uxas_visilibity PUBLIC uxas_common_includes)
 # ============================================================================
 # uxas_plans -- Planning data structures
 # ============================================================================
-file(GLOB PLANS_SOURCES
+file(GLOB PLANS_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Plans/*.cpp"
     "${UXAS_SRC_DIR}/Plans/*.h"
 )
@@ -91,7 +91,7 @@ target_link_libraries(uxas_plans PUBLIC uxas_common_includes)
 # ============================================================================
 # uxas_dpss -- DPSS (path/sensor steering algorithms)
 # ============================================================================
-file(GLOB DPSS_SOURCES
+file(GLOB DPSS_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/DPSS/*.cpp"
     "${UXAS_SRC_DIR}/DPSS/*.h"
 )
@@ -107,7 +107,7 @@ target_link_libraries(uxas_dpss PUBLIC uxas_common_includes)
 # ============================================================================
 # Collect sources from Utilities/ but EXCLUDE the localcoords/ subdirectory
 # which is a Python C extension module, not a regular UxAS C++ source.
-file(GLOB UTILITIES_SOURCES
+file(GLOB UTILITIES_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Utilities/*.cpp"
     "${UXAS_SRC_DIR}/Utilities/*.h"
 )
@@ -122,11 +122,11 @@ target_link_libraries(uxas_utilities PUBLIC uxas_common_includes)
 # uxas_communications -- ZeroMQ messaging layer
 # ============================================================================
 # Collect from Communications/ and all ZeroMq/** subdirectories.
-file(GLOB COMMS_TOP_SOURCES
+file(GLOB COMMS_TOP_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Communications/*.cpp"
     "${UXAS_SRC_DIR}/Communications/*.h"
 )
-file(GLOB_RECURSE COMMS_ZMQ_SOURCES
+file(GLOB_RECURSE COMMS_ZMQ_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Communications/ZeroMq/*.cpp"
     "${UXAS_SRC_DIR}/Communications/ZeroMq/*.h"
 )
@@ -152,7 +152,7 @@ target_link_libraries(uxas_communications
 # ============================================================================
 # uxas_services -- ~35 service implementations
 # ============================================================================
-file(GLOB SERVICES_SOURCES
+file(GLOB SERVICES_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Services/*.cpp"
     "${UXAS_SRC_DIR}/Services/*.h"
 )
@@ -167,7 +167,7 @@ target_link_libraries(uxas_services PUBLIC uxas_common_includes)
 # ============================================================================
 # uxas_tasks -- ~20 task implementations
 # ============================================================================
-file(GLOB TASKS_SOURCES
+file(GLOB TASKS_SOURCES CONFIGURE_DEPENDS
     "${UXAS_SRC_DIR}/Tasks/*.cpp"
     "${UXAS_SRC_DIR}/Tasks/*.h"
 )
