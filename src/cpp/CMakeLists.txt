@@ -183,22 +183,40 @@ target_link_libraries(uxas_tasks PUBLIC uxas_common_includes)
 # ============================================================================
 add_executable(uxas "${UXAS_SRC_DIR}/UxAS_Main.cpp")
 
-target_link_libraries(uxas
-    PRIVATE
-        # Use linker group for circular dependencies between services/tasks/communications
-        -Wl,--start-group
+# GNU ld (Linux) requires explicit linker groups to resolve circular
+# dependencies between services, tasks, and communications.
+# Apple ld64 and other non-GNU linkers handle this automatically.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(uxas
+        PRIVATE
+            -Wl,--start-group
+                uxas_tasks
+                uxas_services
+                uxas_communications
+                uxas_utilities
+            -Wl,--end-group
+            uxas_plans
+            uxas_dpss
+            uxas_visilibity
+            uxas_common_includes
+            czmq-static
+            zyre-static
+    )
+else()
+    target_link_libraries(uxas
+        PRIVATE
             uxas_tasks
             uxas_services
             uxas_communications
             uxas_utilities
-        -Wl,--end-group
-        uxas_plans
-        uxas_dpss
-        uxas_visilibity
-        uxas_common_includes
-        czmq-static
-        zyre-static
-)
+            uxas_plans
+            uxas_dpss
+            uxas_visilibity
+            uxas_common_includes
+            czmq-static
+            zyre-static
+    )
+endif()
 
 # System libraries (matching the old Makefile's linker flags)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
