@@ -18,7 +18,7 @@ project(OpenUxAS
     LANGUAGES CXX
 )
 
-# ---- C++ standard (C++11 for this milestone; future milestones upgrade) ----
+# ---- C++ standard (C++11 for this milestone; Milestone 3 upgrades to C++20) -
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -58,7 +58,7 @@ include(cmake/Dependencies.cmake)
 # ---- LMCP code-generation (builds LmcpGen, generates C++ from MDMs) ------
 include(cmake/LmcpGeneration.cmake)
 
-# ---- CTest integration (unit tests added in later milestones) -------------
+# ---- CTest integration (unit tests added in Milestones 9 and 10) -----------
 include(CTest)
 enable_testing()
 
