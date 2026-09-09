@@ -182,6 +182,7 @@ add_custom_target(lmcp_generate
             -mdmdir "${MDMS_DIR}"
             -cpp
             -dir "${LMCP_DIR}"
+    COMMAND "${CMAKE_COMMAND}" -E touch "${_lmcp_stamp}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Regenerating LMCP C++ code from MDM XML definitions"
     VERBATIM
