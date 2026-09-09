@@ -113,14 +113,6 @@ add_library(uxas_communications STATIC
     ${COMMS_TOP_SOURCES}
     ${COMMS_ZMQ_SOURCES}
 )
-target_include_directories(uxas_communications PUBLIC
-    "${UXAS_SRC_DIR}/Communications"
-    "${UXAS_SRC_DIR}/Communications/ZeroMq"
-    "${UXAS_SRC_DIR}/Communications/ZeroMq/Proxy"
-    "${UXAS_SRC_DIR}/Communications/ZeroMq/Receivers"
-    "${UXAS_SRC_DIR}/Communications/ZeroMq/Senders"
-    "${UXAS_SRC_DIR}/Communications/ZeroMq/Sockets"
-)
 target_link_libraries(uxas_communications
     PUBLIC  uxas_common_includes
             czmq-static
