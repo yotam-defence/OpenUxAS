@@ -22,9 +22,8 @@
 #include "Constants/Constants_FileSystem.h"
 
 //BOOST FILESYSTEM
-#include "boost/filesystem/fstream.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/regex.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 
 #include <fstream>      //std::ofstream
 
