@@ -11,7 +11,7 @@
 #       that step is done.
 # ============================================================================
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.22...3.25)
 
 project(OpenUxAS
     VERSION   3.2.0
