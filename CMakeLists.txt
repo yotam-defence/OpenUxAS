@@ -55,7 +55,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 # ---- Third-party dependencies (FetchContent) -------------------------------
 include(cmake/Dependencies.cmake)
 
-# ---- LMCP code-generation placeholder (completed by Task 3) ---------------
+# ---- LMCP code-generation (builds LmcpGen, generates C++ from MDMs) ------
 include(cmake/LmcpGeneration.cmake)
 
 # ---- Source tree -----------------------------------------------------------
