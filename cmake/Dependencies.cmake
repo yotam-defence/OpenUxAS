@@ -10,6 +10,10 @@
 # find_package() expects the previous layer to be installed.  We work around
 # this by populating the LIBZMQ_*/CZMQ_* cache variables from the
 # FetchContent-built targets before the next layer configures.
+#
+# Version pins are centralized in DependencyVersions.cmake.
+
+include(cmake/DependencyVersions.cmake)
 # ============================================================================
 
 include(FetchContent)
@@ -48,8 +52,8 @@ set(BOOST_INCLUDE_LIBRARIES
 
 FetchContent_Declare(
     Boost
-    URL      https://github.com/boostorg/boost/releases/download/boost-1.85.0/boost-1.85.0-cmake.tar.xz
-    URL_HASH SHA256=0a9cc56ceae46986f5f4d43fe0311d90cf6d2fa9028258a95cab49ffdacf92ad
+    URL      https://github.com/boostorg/boost/releases/download/boost-${DEP_BOOST_VERSION}/boost-${DEP_BOOST_VERSION}-cmake.tar.xz
+    URL_HASH ${DEP_BOOST_URL_HASH}
 )
 
 # ---------------------------------------------------------------------------
@@ -58,7 +62,7 @@ FetchContent_Declare(
 FetchContent_Declare(
     pugixml
     GIT_REPOSITORY https://github.com/zeux/pugixml.git
-    GIT_TAG        v1.14
+    GIT_TAG        ${DEP_PUGIXML_TAG}
     GIT_SHALLOW    TRUE
 )
 
@@ -73,7 +77,7 @@ set(SQLITE_ENABLE_COLUMN_METADATA OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     SQLiteCpp
     GIT_REPOSITORY https://github.com/SRombauts/SQLiteCpp.git
-    GIT_TAG        3.3.2
+    GIT_TAG        ${DEP_SQLITECPP_TAG}
     GIT_SHALLOW    TRUE
 )
 
@@ -111,7 +115,7 @@ set(WITH_PERF_TOOL  OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     libzmq
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
-    GIT_TAG        v4.3.5
+    GIT_TAG        ${DEP_LIBZMQ_TAG}
     GIT_SHALLOW    TRUE
 )
 
@@ -135,7 +139,7 @@ set(CPPZMQ_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     cppzmq
     GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-    GIT_TAG        v4.10.0
+    GIT_TAG        ${DEP_CPPZMQ_TAG}
     GIT_SHALLOW    TRUE
 )
 
@@ -151,7 +155,7 @@ set(CZMQ_BUILD_STATIC  ON  CACHE BOOL "" FORCE)
 FetchContent_Declare(
     czmq
     GIT_REPOSITORY https://github.com/zeromq/czmq.git
-    GIT_TAG        v4.2.1
+    GIT_TAG        ${DEP_CZMQ_TAG}
     GIT_SHALLOW    TRUE
 )
 
@@ -176,7 +180,7 @@ set(ZYRE_BUILD_STATIC ON  CACHE BOOL "" FORCE)
 FetchContent_Declare(
     zyre
     GIT_REPOSITORY https://github.com/zeromq/zyre.git
-    GIT_TAG        v2.0.1
+    GIT_TAG        ${DEP_ZYRE_TAG}
     GIT_SHALLOW    TRUE
 )
 

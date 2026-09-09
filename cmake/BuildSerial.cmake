@@ -2,11 +2,12 @@
 # (upstream requires catkin; we bypass it and compile sources directly).
 
 include(FetchContent)
+include(cmake/DependencyVersions.cmake)
 
 FetchContent_Declare(
     serial
     GIT_REPOSITORY https://github.com/wjwwood/serial.git
-    GIT_TAG        1.2.1
+    GIT_TAG        ${DEP_SERIAL_TAG}
     GIT_SHALLOW    TRUE
 )
 
