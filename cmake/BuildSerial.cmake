@@ -1,11 +1,5 @@
-# ============================================================================
-# BuildSerial.cmake -- Build the wjwwood/serial library without catkin
-# ============================================================================
-#
-# The upstream serial library is a ROS catkin package whose CMakeLists.txt
-# requires find_package(catkin).  Since OpenUxAS does not use ROS we fetch
-# the sources and build a plain STATIC library target directly.
-# ============================================================================
+# BuildSerial.cmake -- Build wjwwood/serial as a plain STATIC lib
+# (upstream requires catkin; we bypass it and compile sources directly).
 
 include(FetchContent)
 
@@ -16,8 +10,7 @@ FetchContent_Declare(
     GIT_SHALLOW    TRUE
 )
 
-# Populate sources only -- do NOT call FetchContent_MakeAvailable because
-# the upstream CMakeLists.txt requires catkin.
+# Populate only -- upstream CMakeLists.txt requires catkin.
 FetchContent_GetProperties(serial)
 if(NOT serial_POPULATED)
     FetchContent_Populate(serial)
