@@ -56,7 +56,7 @@ target_link_libraries(uxas_common_includes INTERFACE
     Boost::polygon
     pugixml::pugixml
     SQLiteCpp
-    cppzmq
+    cppzmq-static
     serial
 )
 
@@ -160,6 +160,7 @@ file(GLOB SERVICES_SOURCES
 add_library(uxas_services STATIC ${SERVICES_SOURCES})
 target_include_directories(uxas_services PUBLIC
     "${UXAS_SRC_DIR}/Services"
+    "${CMAKE_SOURCE_DIR}/resources/AutomationDiagramDataService"
 )
 target_link_libraries(uxas_services PUBLIC uxas_common_includes)
 
@@ -183,16 +184,20 @@ target_link_libraries(uxas_tasks PUBLIC uxas_common_includes)
 add_executable(uxas "${UXAS_SRC_DIR}/UxAS_Main.cpp")
 
 target_link_libraries(uxas
-    PRIVATE uxas_tasks
+    PRIVATE
+        # Use linker group for circular dependencies between services/tasks/communications
+        -Wl,--start-group
+            uxas_tasks
             uxas_services
             uxas_communications
             uxas_utilities
-            uxas_plans
-            uxas_dpss
-            uxas_visilibity
-            uxas_common_includes
-            czmq-static
-            zyre-static
+        -Wl,--end-group
+        uxas_plans
+        uxas_dpss
+        uxas_visilibity
+        uxas_common_includes
+        czmq-static
+        zyre-static
 )
 
 # System libraries (matching the old Makefile's linker flags)

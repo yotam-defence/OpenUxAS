@@ -392,7 +392,7 @@ namespace n_FrameworkLib
                 {
                     if (!ndCurrent.attribute("id").empty())
                     {
-                        int64_t wayId = ndCurrent.attribute("id").as_int64();
+                        int64_t wayId = ndCurrent.attribute("id").as_llong();
                         bool isHighway(false);
                         std::vector<int64_t> nodes;
                         for (pugi::xml_node wayNode = ndCurrent.first_child(); wayNode; wayNode = wayNode.next_sibling())
@@ -401,7 +401,7 @@ namespace n_FrameworkLib
                             {
                                 if (!wayNode.attribute("ref").empty())
                                 {
-                                    nodes.push_back(wayNode.attribute("ref").as_int64());
+                                    nodes.push_back(wayNode.attribute("ref").as_llong());
                                 }
                             }
                             // only save nodes and edges associated with highway's (i.e any road)
@@ -438,7 +438,7 @@ namespace n_FrameworkLib
                     int64_t nodeId = 0;
                     if (!ndCurrent.attribute("id").empty())
                     {
-                        nodeId = ndCurrent.attribute("id").as_int64();
+                        nodeId = ndCurrent.attribute("id").as_llong();
                         // only load nodes associated with way's that are highway's
                         auto itIdToIndex = nodeIdVsIndex.find(nodeId);
                         if(itIdToIndex != nodeIdVsIndex.end())

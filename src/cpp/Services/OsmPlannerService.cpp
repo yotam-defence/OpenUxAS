@@ -973,7 +973,7 @@ bool OsmPlannerService::isBuildRoadGraphWithOsm(const std::string & osmFile)
             {
                 if (!ndCurrent.attribute("id").empty())
                 {
-                    int64_t wayId = ndCurrent.attribute("id").as_int64();
+                    int64_t wayId = ndCurrent.attribute("id").as_llong();
                     bool isHighway(false);
                     std::vector<int64_t> nodes; // all the node associated with this way
                     for (pugi::xml_node wayNode = ndCurrent.first_child(); wayNode; wayNode = wayNode.next_sibling())
@@ -982,7 +982,7 @@ bool OsmPlannerService::isBuildRoadGraphWithOsm(const std::string & osmFile)
                         {
                             if (!wayNode.attribute("ref").empty())
                             {
-                                nodes.push_back(wayNode.attribute("ref").as_int64());
+                                nodes.push_back(wayNode.attribute("ref").as_llong());
                             }
                         }
                             // only save nodes and edges associated with highway's (i.e any road)
@@ -1064,7 +1064,7 @@ bool OsmPlannerService::isBuildRoadGraphWithOsm(const std::string & osmFile)
                 int64_t nodeId = 0;
                 if (!ndCurrent.attribute("id").empty())
                 {
-                    nodeId = ndCurrent.attribute("id").as_int64();
+                    nodeId = ndCurrent.attribute("id").as_llong();
                     // only load nodes associated with way's that are highway's
                     auto itIdVsPlanning = nodeIdVs_isPlanningNode.find(nodeId);
                     if (itIdVsPlanning != nodeIdVs_isPlanningNode.end())

@@ -92,7 +92,7 @@ AssignmentTreeBranchBoundBase::configure(const pugi::xml_node& ndComponent)
 
     if (!ndComponent.attribute(STRING_XML_NUMBER_NODES_MAXIMUM).empty())
     {
-        m_numberNodesMaximum = ndComponent.attribute(STRING_XML_NUMBER_NODES_MAXIMUM).as_int64();
+        m_numberNodesMaximum = ndComponent.attribute(STRING_XML_NUMBER_NODES_MAXIMUM).as_llong();
     }
 
     if (!ndComponent.attribute(STRING_XML_COST_FUNCTION).empty())

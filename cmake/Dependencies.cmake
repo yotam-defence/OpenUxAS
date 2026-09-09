@@ -109,6 +109,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(libzmq)
 
+# Exclude libzmq executables from default build (they are not needed)
+foreach(_target curve_keygen)
+    if(TARGET ${_target})
+        set_target_properties(${_target} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+endforeach()
+
 # Expose libzmq to CZMQ's Findlibzmq.cmake via cache variables.
 # libzmq's CMake build creates the 'libzmq-static' target.
 FetchContent_GetProperties(libzmq SOURCE_DIR LIBZMQ_SOURCE_DIR)
@@ -146,6 +153,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(czmq)
 
+# Exclude CZMQ executables/tests from default build
+foreach(_target czmq_selftest zmakecert zsp test_randof)
+    if(TARGET ${_target})
+        set_target_properties(${_target} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+endforeach()
+
 # Expose CZMQ to Zyre's Findczmq.cmake via cache variables.
 FetchContent_GetProperties(czmq SOURCE_DIR CZMQ_SOURCE_DIR)
 set(CZMQ_INCLUDE_DIRS "${CZMQ_SOURCE_DIR}/include" CACHE PATH "" FORCE)
@@ -167,3 +181,12 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(zyre)
+
+# Exclude Zyre example/tool/test executables from default build.
+# These fail to link due to duplicate sha1 symbols between libzmq and czmq
+# static archives — and they are not needed by OpenUxAS.
+foreach(_target chat perf_local perf_remote zpinger ztester_beacon ztester_gossip zyre_selftest)
+    if(TARGET ${_target})
+        set_target_properties(${_target} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+    endif()
+endforeach()
