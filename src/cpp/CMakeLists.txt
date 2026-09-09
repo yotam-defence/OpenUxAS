@@ -61,62 +61,40 @@ target_link_libraries(uxas_common_includes INTERFACE
 )
 
 # ============================================================================
+# add_uxas_module -- Helper for simple per-module STATIC libraries
+# ============================================================================
+function(add_uxas_module TARGET_NAME SRC_SUBDIR)
+    file(GLOB _sources CONFIGURE_DEPENDS
+        "${UXAS_SRC_DIR}/${SRC_SUBDIR}/*.cpp"
+        "${UXAS_SRC_DIR}/${SRC_SUBDIR}/*.h"
+    )
+    add_library(${TARGET_NAME} STATIC ${_sources})
+    target_include_directories(${TARGET_NAME} PUBLIC
+        "${UXAS_SRC_DIR}/${SRC_SUBDIR}"
+        ${ARGN}
+    )
+    target_link_libraries(${TARGET_NAME} PUBLIC uxas_common_includes)
+endfunction()
+
+# ============================================================================
 # uxas_visilibity -- Visibility algorithms
 # ============================================================================
-file(GLOB VISILIBITY_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/VisilibityLib/*.cpp"
-    "${UXAS_SRC_DIR}/VisilibityLib/*.h"
-)
-
-add_library(uxas_visilibity STATIC ${VISILIBITY_SOURCES})
-target_include_directories(uxas_visilibity PUBLIC
-    "${UXAS_SRC_DIR}/VisilibityLib"
-)
-target_link_libraries(uxas_visilibity PUBLIC uxas_common_includes)
+add_uxas_module(uxas_visilibity VisilibityLib)
 
 # ============================================================================
 # uxas_plans -- Planning data structures
 # ============================================================================
-file(GLOB PLANS_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/Plans/*.cpp"
-    "${UXAS_SRC_DIR}/Plans/*.h"
-)
-
-add_library(uxas_plans STATIC ${PLANS_SOURCES})
-target_include_directories(uxas_plans PUBLIC
-    "${UXAS_SRC_DIR}/Plans"
-)
-target_link_libraries(uxas_plans PUBLIC uxas_common_includes)
+add_uxas_module(uxas_plans Plans)
 
 # ============================================================================
 # uxas_dpss -- DPSS (path/sensor steering algorithms)
 # ============================================================================
-file(GLOB DPSS_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/DPSS/*.cpp"
-    "${UXAS_SRC_DIR}/DPSS/*.h"
-)
-
-add_library(uxas_dpss STATIC ${DPSS_SOURCES})
-target_include_directories(uxas_dpss PUBLIC
-    "${UXAS_SRC_DIR}/DPSS"
-)
-target_link_libraries(uxas_dpss PUBLIC uxas_common_includes)
+add_uxas_module(uxas_dpss DPSS)
 
 # ============================================================================
 # uxas_utilities -- Logging, config, math, XML, etc.
 # ============================================================================
-# Collect sources from Utilities/ but EXCLUDE the localcoords/ subdirectory
-# which is a Python C extension module, not a regular UxAS C++ source.
-file(GLOB UTILITIES_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/Utilities/*.cpp"
-    "${UXAS_SRC_DIR}/Utilities/*.h"
-)
-
-add_library(uxas_utilities STATIC ${UTILITIES_SOURCES})
-target_include_directories(uxas_utilities PUBLIC
-    "${UXAS_SRC_DIR}/Utilities"
-)
-target_link_libraries(uxas_utilities PUBLIC uxas_common_includes)
+add_uxas_module(uxas_utilities Utilities)
 
 # ============================================================================
 # uxas_communications -- ZeroMQ messaging layer
@@ -152,31 +130,14 @@ target_link_libraries(uxas_communications
 # ============================================================================
 # uxas_services -- ~35 service implementations
 # ============================================================================
-file(GLOB SERVICES_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/Services/*.cpp"
-    "${UXAS_SRC_DIR}/Services/*.h"
-)
-
-add_library(uxas_services STATIC ${SERVICES_SOURCES})
-target_include_directories(uxas_services PUBLIC
-    "${UXAS_SRC_DIR}/Services"
+add_uxas_module(uxas_services Services
     "${CMAKE_SOURCE_DIR}/resources/AutomationDiagramDataService"
 )
-target_link_libraries(uxas_services PUBLIC uxas_common_includes)
 
 # ============================================================================
 # uxas_tasks -- ~20 task implementations
 # ============================================================================
-file(GLOB TASKS_SOURCES CONFIGURE_DEPENDS
-    "${UXAS_SRC_DIR}/Tasks/*.cpp"
-    "${UXAS_SRC_DIR}/Tasks/*.h"
-)
-
-add_library(uxas_tasks STATIC ${TASKS_SOURCES})
-target_include_directories(uxas_tasks PUBLIC
-    "${UXAS_SRC_DIR}/Tasks"
-)
-target_link_libraries(uxas_tasks PUBLIC uxas_common_includes)
+add_uxas_module(uxas_tasks Tasks)
 
 # ============================================================================
 # uxas -- Main executable
