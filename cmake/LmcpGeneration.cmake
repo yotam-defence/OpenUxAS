@@ -85,6 +85,14 @@ else()
     message(STATUS "Using existing LmcpGen.jar: ${LMCPGEN_JAR}")
 endif()
 
+set(_lmcpgen_cmd
+    "${Java_EXECUTABLE}" -Xmx2048m
+    -jar "${LMCPGEN_JAR}"
+    -mdmdir "${MDMS_DIR}"
+    -cpp
+    -dir "${LMCP_DIR}"
+)
+
 # ---------------------------------------------------------------------------
 # Step 2: Generate LMCP C++ code from MDM XML files
 # ---------------------------------------------------------------------------
@@ -122,11 +130,7 @@ if(_need_generation)
     file(MAKE_DIRECTORY "${LMCP_DIR}")
 
     execute_process(
-        COMMAND "${Java_EXECUTABLE}" -Xmx2048m
-                -jar "${LMCPGEN_JAR}"
-                -mdmdir "${MDMS_DIR}"
-                -cpp
-                -dir "${LMCP_DIR}"
+        COMMAND ${_lmcpgen_cmd}
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         RESULT_VARIABLE _lmcpgen_result
         OUTPUT_VARIABLE _lmcpgen_output
@@ -177,11 +181,7 @@ add_subdirectory("${LMCP_DIR}" "${CMAKE_BINARY_DIR}/lmcp")
 # regeneration.  This is useful during development when MDM files change
 # and you want to regenerate without a full reconfigure.
 add_custom_target(lmcp_generate
-    COMMAND "${Java_EXECUTABLE}" -Xmx2048m
-            -jar "${LMCPGEN_JAR}"
-            -mdmdir "${MDMS_DIR}"
-            -cpp
-            -dir "${LMCP_DIR}"
+    COMMAND ${_lmcpgen_cmd}
     COMMAND "${CMAKE_COMMAND}" -E touch "${_lmcp_stamp}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Regenerating LMCP C++ code from MDM XML definitions"
