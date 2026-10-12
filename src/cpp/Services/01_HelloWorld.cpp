@@ -62,7 +62,7 @@ bool HelloWorld::configure(const pugi::xml_node& ndComponent)
     }
     if (!ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).empty())
     {
-        m_sendPeriod_ms = ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).as_int64();
+        m_sendPeriod_ms = ndComponent.attribute(STRING_XML_SEND_PERIOD_MS).as_llong();
     }
 
     // subscribe to messages::

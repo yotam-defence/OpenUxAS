@@ -92,7 +92,7 @@ TaskManagerService::configure(const pugi::xml_node& ndComponent)
             std::string taskType = m_noTaskTypeString;
             if (!ndCurrent.attribute(STRING_XML_TASKID).empty())
             {
-                taskId = ndCurrent.attribute(STRING_XML_TASKID).as_int64();
+                taskId = ndCurrent.attribute(STRING_XML_TASKID).as_llong();
             }
             else if (!ndCurrent.attribute(STRING_XML_TASKTYPE).empty()) // only use type is there is no taskid
             {

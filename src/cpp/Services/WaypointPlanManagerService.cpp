@@ -137,7 +137,7 @@ WaypointPlanManagerService::configure(const pugi::xml_node& ndComponent)
     }
     if (!ndComponent.attribute(STRING_XML_GIMBAL_PAYLOAD_ID).empty())
     {
-        m_gimbalPayloadId = ndComponent.attribute(STRING_XML_GIMBAL_PAYLOAD_ID).as_int64();
+        m_gimbalPayloadId = ndComponent.attribute(STRING_XML_GIMBAL_PAYLOAD_ID).as_llong();
     }
 
     addSubscriptionAddress(afrl::cmasi::AutomationResponse::Subscription);
