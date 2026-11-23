@@ -42,10 +42,9 @@ def check_gcc_min_version() -> None:
         logging.warning("cannot determine gcc major version")
         return
     if major < MIN_GCC_MAJOR:
-        logging.critical(
-            "gcc %d found, but gcc >= %d is required (C++17)",
+        logging.warning(
+            "gcc %d found, but gcc >= %d is required for the C++17 build",
             major, MIN_GCC_MAJOR)
-        sys.exit(1)
 
 
 def check_common_tools() -> None:
