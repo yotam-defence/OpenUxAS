@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "name": "smoke_heartbeat",
+  "description": "Smoke test: a heartbeat sequence of KeyValuePair messages (no AutomationRequest). Both implementations must produce matching output.",
+  "entity": {"id": 100, "type": "Aircraft"},
+  "bus": {"pub": "tcp://127.0.0.1:5560", "pull": "tcp://127.0.0.1:5561"},
+  "services": [
+    {"type": "AutomationRequestValidatorService"}
+  ],
+  "timing": {"startup_ms": 2000, "settle_ms": 300, "drain_ms": 500, "shutdown_ms": 3000},
+  "replay": [
+    {"label": "heartbeat 1", "lmcp": {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "1"}}},
+    {"label": "heartbeat 2", "delay_ms": 200, "lmcp": {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "2"}}},
+    {"label": "heartbeat 3", "delay_ms": 200, "lmcp": {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "3"}}}
+  ],
+  "capture": {"echo_filter": "bytes", "window": "step", "min_messages": 0},
+  "comparators": []
+}

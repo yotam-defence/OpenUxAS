@@ -12,8 +12,16 @@ subdirectory. The pylmcp.Object class (used to create instance of objects) use
 by default this database
 """
 
+import glob
 import os
-from e3.fs import ls
+
+try:
+    from e3.fs import ls
+except ImportError:  # pragma: no cover - e3 is optional for offline tooling
+    def ls(pattern):
+        """Minimal fallback for e3.fs.ls when e3 is not installed."""
+        return sorted(glob.glob(pattern))
+
 from pylmcp.model.series import Series
 
 
