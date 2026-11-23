@@ -1,0 +1,7 @@
+{
+  "binary": "ada",
+  "messages": [],
+  "provenance": "hand-authored expectation (no reaction to bridge-only heartbeats); replace with `--record-golden` output from a real uxas-ada run",
+  "scenario": "smoke_heartbeat",
+  "version": 1
+}

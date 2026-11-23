@@ -1,0 +1,27 @@
+{
+  "name": "smoke_heartbeat",
+  "description": "Heartbeat-only smoke sequence (KeyValuePair, no AutomationRequest). Both binaries run a bridge-only configuration; the replayed heartbeats themselves are excluded from the comparison, so the compared capture is the set of *reactions* (expected: none from either side). Verifies both binaries start, survive the sequence and emit nothing unexpected.",
+  "entity_id": 100,
+  "startup_settle_ms": 1500,
+  "config": {
+    "ada": "smoke_heartbeat/ada.xml",
+    "cpp": "smoke_heartbeat/cpp.xml"
+  },
+  "messages": [
+    {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "1"}, "delay_ms": 200},
+    {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "2"}, "delay_ms": 200},
+    {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "3"}, "delay_ms": 200}
+  ],
+  "capture": {
+    "window_ms": 1000,
+    "exclude_descriptors": ["afrl.cmasi.KeyValuePair"]
+  },
+  "canonical": {
+    "strip_fields": ["Time", "TimeStamp"],
+    "remap_fields": [],
+    "float_digits": 6
+  },
+  "comparators": {
+    "*": "exact"
+  }
+}
