@@ -264,6 +264,7 @@ def test_cli_missing_golden_is_error(tmp_path):
 
 
 def test_cli_missing_binary_is_error(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("UXAS_CPP_BIN", raising=False)
     monkeypatch.setenv("PATH", str(tmp_path))
     golden.save(golden.golden_path(str(tmp_path), "smoke_heartbeat", "ada"),
