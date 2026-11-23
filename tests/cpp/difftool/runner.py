@@ -10,7 +10,6 @@ tested offline:
 import os
 import signal
 import subprocess
-import tempfile
 import time
 
 from . import comparators, golden, normalize, report
@@ -31,6 +30,8 @@ class Process(object):
             self.p = subprocess.Popen(argv, stdout=self.log or subprocess.DEVNULL,
                                       stderr=subprocess.STDOUT)
         except OSError as e:
+            if self.log:
+                self.log.close()
             raise RunError("cannot start %s (%s): %s" % (name, argv[0], e))
 
     def alive(self):
