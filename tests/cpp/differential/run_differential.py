@@ -62,7 +62,7 @@ def self_test(argv=()):
     tests = os.path.join(HERE, "tests")
     try:
         import pytest  # noqa: F401
-    except ImportError:
+    except Exception:  # missing or broken pytest install
         return _mini_runner(tests)
     import pytest
     return int(pytest.main(["-q", "-p", "no:cacheprovider", tests] + list(argv)))
