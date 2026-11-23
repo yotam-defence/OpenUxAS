@@ -49,3 +49,9 @@ def test_real_backend_missing_binary_reported_before_zmq_needed():
         else:
             raise AssertionError("expected RunError")
         assert be.stop() == {}
+
+
+def test_resolve_bin_cli():
+    import run_differential
+    assert run_differential.main(["--resolve-bin", "ada", "--ada-bin", sys.executable]) == 0
+    assert run_differential.main(["--resolve-bin", "ada", "--ada-bin", "/no/such/bin"]) == 1

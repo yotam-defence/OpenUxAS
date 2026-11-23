@@ -10,13 +10,9 @@ SCENARIO=$HERE/scenarios/heartbeat.json
 GOLDEN=${UXAS_GOLDEN:-$HERE/golden/heartbeat.ada.json}
 RUN="python3 -E $HERE/run_differential.py $SCENARIO --cpp-bin $CPP_BIN"
 
-ADA_BIN=
-if [ -n "${UXAS_ADA_BIN:-}" ]; then
-    if [ -x "$UXAS_ADA_BIN" ]; then ADA_BIN=$UXAS_ADA_BIN
-    elif command -v "$UXAS_ADA_BIN" >/dev/null 2>&1; then ADA_BIN=$(command -v "$UXAS_ADA_BIN")
-    else echo "warning: UXAS_ADA_BIN=$UXAS_ADA_BIN not found" >&2; fi
-elif command -v uxas_ada >/dev/null 2>&1; then
-    ADA_BIN=$(command -v uxas_ada)
+ADA_BIN=$(python3 -E "$HERE/run_differential.py" --resolve-bin ada) || ADA_BIN=
+if [ -z "$ADA_BIN" ] && [ -n "${UXAS_ADA_BIN:-}" ]; then
+    echo "warning: UXAS_ADA_BIN=$UXAS_ADA_BIN not found" >&2
 fi
 
 if [ -n "$ADA_BIN" ]; then

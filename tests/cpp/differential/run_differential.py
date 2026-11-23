@@ -46,6 +46,10 @@ def build_parser():
                    help="Ada-less smoke mode: run only the C++ side twice, "
                         "check clean runs, non-error heartbeat capture and "
                         "determinism. Does NOT check Ada parity.")
+    p.add_argument("--resolve-bin", choices=("ada", "cpp"),
+                   help="print the resolved binary path (same rules as a real "
+                        "run: --<side>-bin, env UXAS_<SIDE>_BIN, PATH default) "
+                        "and exit 0, or exit 1 if not found; no scenario needed")
     p.add_argument("--plugin", action="append", default=[],
                    help="comparator plug-in (file.py or module); repeatable")
     p.add_argument("--workdir", help="keep configs/logs in this directory "
@@ -104,6 +108,17 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     if args.self_test:
         return self_test()
+    if args.resolve_bin:
+        from uxdiff import backends
+        if args.resolve_bin == "ada":
+            found = backends.find_binary(args.ada_bin, "UXAS_ADA_BIN",
+                                         ["uxas_ada"])
+        else:
+            found = backends.find_binary(args.cpp_bin, "UXAS_CPP_BIN", ["uxas"])
+        if found:
+            print(found)
+            return 0
+        return 1
     try:
         for plug in args.plugin:
             comparators.load_plugin(plug)

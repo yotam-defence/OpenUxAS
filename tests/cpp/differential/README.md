@@ -30,6 +30,7 @@ python3 -I -m pytest tests                        # same tests via pytest
 | `--golden FILE` | use a cached reference instead of running Ada (for machines without the Alire/GNAT toolchain) |
 | `--ignore-golden-digest` | accept a golden recorded from an older version of the scenario |
 | `--cpp-only` | Ada-less smoke mode, see below. Cannot be combined with `--golden`/`--record-golden` |
+| `--resolve-bin ada|cpp` | print the resolved binary path using the same lookup as a real run and exit (1 if not found); used by `smoke.sh` |
 | `--plugin X` | load a comparator plug-in (`file.py` or module name), repeatable |
 | `--workdir DIR` | keep generated configs and process logs there (kept automatically on failure) |
 | `--report FILE` | machine readable JSON result |
