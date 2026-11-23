@@ -1,0 +1,65 @@
+{
+  "name": "heartbeat",
+  "description": "Smoke test: a KeyValuePair heartbeat sequence (no AutomationRequest). Both binaries must publish the same multiset of KeyValuePair messages.",
+  "entity": {
+    "id": 100,
+    "type": "Aircraft"
+  },
+  "services": {
+    "common": [],
+    "cpp": [],
+    "ada": []
+  },
+  "timing": {
+    "startup_settle_ms": 1500,
+    "post_replay_settle_ms": 1000,
+    "timeout_s": 60,
+    "shutdown_grace_s": 5
+  },
+  "capture": {
+    "subscriptions": [
+      "afrl.cmasi.KeyValuePair"
+    ],
+    "window": "all",
+    "exclude_echo": false
+  },
+  "comparator": "heartbeat",
+  "comparator_options": {
+    "keys": [
+      "heartbeat"
+    ],
+    "compare_values": true
+  },
+  "replay": [
+    {
+      "label": "heartbeat-0",
+      "delay_ms": 200,
+      "address": "afrl.cmasi.KeyValuePair",
+      "frame_hex": "4c4d43500000001d01434d4153490000000000000200030009686561727462656174000130000006a6"
+    },
+    {
+      "label": "heartbeat-1",
+      "delay_ms": 200,
+      "address": "afrl.cmasi.KeyValuePair",
+      "frame_hex": "4c4d43500000001d01434d4153490000000000000200030009686561727462656174000131000006a7"
+    },
+    {
+      "label": "heartbeat-2",
+      "delay_ms": 200,
+      "address": "afrl.cmasi.KeyValuePair",
+      "frame_hex": "4c4d43500000001d01434d4153490000000000000200030009686561727462656174000132000006a8"
+    },
+    {
+      "label": "heartbeat-3",
+      "delay_ms": 200,
+      "address": "afrl.cmasi.KeyValuePair",
+      "frame_hex": "4c4d43500000001d01434d4153490000000000000200030009686561727462656174000133000006a9"
+    },
+    {
+      "label": "heartbeat-4",
+      "delay_ms": 200,
+      "address": "afrl.cmasi.KeyValuePair",
+      "frame_hex": "4c4d43500000001d01434d4153490000000000000200030009686561727462656174000134000006aa"
+    }
+  ]
+}
