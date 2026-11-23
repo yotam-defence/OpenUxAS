@@ -89,3 +89,6 @@ __pycache__/
 *.pyc
 *.pyo
 Testing/
+
+# runtime logs
+log/
