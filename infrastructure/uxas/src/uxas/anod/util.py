@@ -30,10 +30,29 @@ def check_tool(tool: str) -> str:
         sys.exit(1)
 
 
+MIN_GCC_MAJOR = 11  # OpenUxAS C++ is built with -std=c++17
+
+
+def check_gcc_min_version() -> None:
+    """Ensure gcc is recent enough for the C++17 build (GCC 11+)."""
+    try:
+        p = Run(["gcc", "-dumpversion"])
+        major = int(p.out.strip().split(".")[0])
+    except Exception:
+        logging.warning("cannot determine gcc major version")
+        return
+    if major < MIN_GCC_MAJOR:
+        logging.critical(
+            "gcc %d found, but gcc >= %d is required (C++17)",
+            major, MIN_GCC_MAJOR)
+        sys.exit(1)
+
+
 def check_common_tools() -> None:
     # The following variables are used to force recompilation
     # in case of some tool change.
     gcc_version = check_tool("gcc")
+    check_gcc_min_version()
     os.environ["OPENUXAS_COMPILER_VERSION"] = gcc_version
     cmake_version = check_tool("cmake")
     os.environ["OPENUXAS_CMAKE_VERSION"] = cmake_version

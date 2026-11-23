@@ -60,6 +60,11 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
+            - name: Unit test OpenUxAS C++ (GoogleTest)
+              run: |
+                  cd OpenUxAS
+                  ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
             - name: Test OpenUxAS C++
               run: |
                   cd OpenUxAS/tests/cpp

@@ -1,3 +1,27 @@
+# C++ unit tests (GoogleTest)
+
+Unit tests live in `tests/cpp/unit/*.cpp` and are built into a single binary
+(`obj/cpp/unit_tests`, or `$OBJECT_DIR/cpp/unit_tests`) by:
+
+    make test            # from the OpenUxAS root (or `./anod test uxas`)
+
+The C++ sources are compiled with `-std=c++17` (GCC 11+ / Clang 14+).
+
+**GoogleTest acquisition (design decision):** the system package is used
+rather than building googletest from source or vendoring it:
+
+    sudo apt install libgtest-dev      # Ubuntu 22.04 / 24.04 (ships static libs)
+
+The test binary links `-lgtest_main -lgtest -llmcp -lpthread`; liblmcp (and its
+headers) must be reachable via the usual anod/LIBRARY_PATH/CPATH environment.
+`infrastructure/install` installs `libgtest-dev` along with the other apt
+dependencies and CI (`.github/workflows/cpp17.yml`, `uxas-cpp.yaml`) runs the suite.
+
+To add a test, drop a `test_*.cpp` file in `tests/cpp/unit/` using
+`#include <gtest/gtest.h>`; no `main()` is needed (`gtest_main` provides it).
+`test_bytebuffers.cpp` ports the Ada `test_bytebuffers` checks to
+`avtas::lmcp::ByteBuffer`.
+
 
 # Table of Contents
 

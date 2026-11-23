@@ -48,6 +48,8 @@ APT_INSTALL = Command(
         "-y",
         "cmake",
         "g++",
+        # GoogleTest for the C++ unit tests (make test)
+        "libgtest-dev",
         "pkg-config",
         "uuid-dev",
         "libyaml-dev",

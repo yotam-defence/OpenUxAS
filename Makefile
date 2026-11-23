@@ -50,7 +50,7 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 CXX=$(ANODENV)g++
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
@@ -73,11 +73,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -135,6 +135,8 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
+	@echo "   test:  Build and run the GoogleTest unit tests in tests/cpp/unit"
+	@echo "          (requires the system package libgtest-dev, see tests/cpp/README.md)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -148,8 +150,32 @@ clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	@echo "[Remove unit tests]"
+	rm -rf $(OBJECT_DIR)/cpp/unit_tests $(OBJECT_DIR)/cpp/unit
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
+
+# Unit tests (GoogleTest, system package libgtest-dev)
+UNIT_TEST_DIR:=tests/cpp/unit
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+UNIT_TEST_OBJECTS:=$(patsubst %.cpp,$(OBJECT_DIR)/cpp/unit/%.o,$(notdir $(UNIT_TEST_SOURCES)))
+UNIT_TEST_BIN:=$(OBJECT_DIR)/cpp/unit_tests
+UNIT_TEST_LIBS:=-lgtest_main -lgtest -llmcp -lpthread
+
+.PHONY: all test clean help
+
+test: $(UNIT_TEST_BIN)
+	@echo "[Run unit tests]"
+	@$(UNIT_TEST_BIN)
+
+$(OBJECT_DIR)/cpp/unit/%.o: $(UNIT_TEST_DIR)/%.cpp
+	@mkdir -p `dirname $@`
+	@echo "[Compiling $<]"
+	@$(CXX) -c $< $(INCLUDES) $(CXX_FLAGS) -o $@
+
+$(UNIT_TEST_BIN): $(UNIT_TEST_OBJECTS)
+	@echo "[Link unit tests]"
+	@$(CXX) -o $@ $^ $(UNIT_TEST_LIBS) $(CXX_FLAGS)
 
 all: $(OBJECT_DIR)/uxas
 	@echo "[Project compiled]"
