@@ -26,7 +26,7 @@ The top guidelines are as follows:
 
 -   Minimize logic in constructors
 
--   Use C++11 types (e.g. int32\_t rather than int)
+-   Use C++17 (GCC 11+/Clang 14+) types (e.g. int32\_t rather than int)
 
 -   Prefix member variables with ‘m\_’
 

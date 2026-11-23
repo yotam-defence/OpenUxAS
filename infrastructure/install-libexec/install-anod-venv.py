@@ -47,7 +47,10 @@ APT_INSTALL = Command(
         "install",
         "-y",
         "cmake",
+        # C++17 baseline: GCC 11+ (Ubuntu 22.04/24.04 default) or Clang 14+
         "g++",
+        # GoogleTest for `make test` (tests/cpp/unit)
+        "libgtest-dev",
         "pkg-config",
         "uuid-dev",
         "libyaml-dev",

@@ -7,7 +7,11 @@ from e3.os.process import Run
 
 import logging
 import os
+import re
 import sys
+
+# Minimum host toolchain: the C++ sources are built with -std=c++17.
+MIN_GCC_MAJOR = 11
 
 
 def check_tool(tool: str) -> str:
@@ -30,10 +34,35 @@ def check_tool(tool: str) -> str:
         sys.exit(1)
 
 
+def check_gcc_version(version_line: str, minimum: int = MIN_GCC_MAJOR) -> None:
+    """Fail if the gcc major version is older than the C++17 baseline.
+
+    Only enforced when the version string can be parsed (clang-masquerading
+    'gcc' wrappers such as Apple's are accepted as-is).
+
+    :param version_line: first line of `gcc --version`
+    :param minimum: minimum accepted gcc major version
+    """
+    if "clang" in version_line.lower():
+        return
+    m = re.search(r"(\d+)\.\d+(\.\d+)?\s*(\(|$|\s)", version_line)
+    if m is None:
+        logging.warning("cannot parse gcc version from %r", version_line)
+        return
+    if int(m.group(1)) < minimum:
+        logging.critical(
+            "gcc %d or newer is required (C++17 build), found: %s",
+            minimum,
+            version_line,
+        )
+        sys.exit(1)
+
+
 def check_common_tools() -> None:
     # The following variables are used to force recompilation
     # in case of some tool change.
     gcc_version = check_tool("gcc")
+    check_gcc_version(gcc_version)
     os.environ["OPENUXAS_COMPILER_VERSION"] = gcc_version
     cmake_version = check_tool("cmake")
     os.environ["OPENUXAS_CMAKE_VERSION"] = cmake_version

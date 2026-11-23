@@ -50,15 +50,14 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 CXX=$(ANODENV)g++
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
 CXX_FLAGS+=-DBOOST_ALLOW_DEPRECATED_HEADERS
 
-# Note: also suppress the warning about geometry needing C++14. This means we
-#       need to change language versions if we update boost or we don't update
-#       boost
+# Note: also suppress the warning about geometry needing C++14. Kept for the
+#       boost version pinned by anod; harmless under C++17.
 CXX_FLAGS+=-DBOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING
 
 # Enable all warnings
@@ -73,11 +72,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -136,6 +135,9 @@ help:
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
 	@echo "   clean: Clean all build artefacts"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   test-clean: Remove unit test objects and binary"
+	@echo "   diff-smoke: Run the Ada-vs-C++ differential smoke scenario"
 	@echo "   help:  This target"
 	@echo
 	@echo "User variables:"
@@ -167,3 +169,48 @@ $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object)
 
 # Include the Makefile fragments containing the dependencies
 -include $(DEPS)
+
+# ---------------------------------------------------------------------------
+# Unit tests (GoogleTest from the system package libgtest-dev, see
+# tests/cpp/unit/README.md for the fallback when it is unavailable).
+#
+# GTEST_LIBS can be overridden, e.g. when GoogleTest is built from source:
+#   make test GTEST_LIBS="-L/opt/gtest/lib -lgtest -lgtest_main"
+# ---------------------------------------------------------------------------
+UNIT_TEST_DIR=tests/cpp/unit
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+UNIT_TEST_OBJECTS:=$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(UNIT_TEST_SOURCES))
+UNIT_TEST_BIN=$(OBJECT_DIR)/uxas_unit_tests
+GTEST_LIBS?=-lgtest -lgtest_main
+UNIT_TEST_LINKER_FLAGS:=$(GTEST_LIBS) -llmcp -lpthread
+
+$(OBJECT_DIR)/$(UNIT_TEST_DIR)/%.o: $(UNIT_TEST_DIR)/%.cpp
+	$(call COMPILE_CXX,$@,$<)
+
+$(UNIT_TEST_BIN): $(UNIT_TEST_OBJECTS)
+	@echo "[Link unit tests]"
+	@$(CXX) -o $@ $^ $(UNIT_TEST_LINKER_FLAGS) $(CXX_FLAGS)
+
+test: $(UNIT_TEST_BIN)
+	@echo "[Run unit tests]"
+	$(UNIT_TEST_BIN)
+
+test-clean:
+	@echo "[Remove unit tests]"
+	rm -f $(UNIT_TEST_OBJECTS) $(UNIT_TEST_OBJECTS:%=%.d) $(UNIT_TEST_BIN)
+
+-include $(UNIT_TEST_OBJECTS:%=%.d)
+
+# ---------------------------------------------------------------------------
+# Differential harness smoke run (tests/cpp/difftest). Defaults to cached
+# golden output for the Ada reference (--ada-golden) so that no Ada toolchain
+# is needed. Override DIFF_ARGS, e.g. DIFF_ARGS="--ada-bin obj/ada/uxas_ada".
+# ---------------------------------------------------------------------------
+PYTHON?=python3
+DIFF_SCENARIO?=tests/cpp/difftest/scenarios/smoke_heartbeat.json
+DIFF_ARGS?=--ada-golden --cpp-bin $(OBJECT_DIR)/uxas
+
+diff-smoke:
+	PYTHONPATH=tests/cpp $(PYTHON) -m difftest run $(DIFF_SCENARIO) $(DIFF_ARGS)
+
+.PHONY: all clean help test test-clean diff-smoke

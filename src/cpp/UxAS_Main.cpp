@@ -29,6 +29,8 @@
 //#include "UxAS_SerialPortEmulator.h"
 #endif
 
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -41,6 +43,10 @@
 
 #define ARG_CFG_PATH "-cfgPath"
 #define ARG_VERSION "-version"
+#define ARG_VERSION_LONG "--version"
+#define ARG_HELP "-help"
+#define ARG_HELP_LONG "--help"
+#define ARG_HELP_SHORT "-h"
 #define ARG_RUN_UNTIL "-runUntil"
 
 #define MAJOR_VERSION "3"
@@ -57,6 +63,15 @@ void signalHandler( int signum ) {
     std::exit(signum);
 }
 #endif
+
+static void printUsage(std::ostream& out)
+{
+    out << "Usage: uxas [-cfgPath <file>] [-runUntil <seconds>] [-version | --version] [-help | --help | -h]" << std::endl;
+    out << "  -cfgPath <file>    path of the base XML configuration (default: cfg.xml)" << std::endl;
+    out << "  -runUntil <sec>    terminate after the given number of seconds (0 = run until killed)" << std::endl;
+    out << "  -version           print version information and exit" << std::endl;
+    out << "  -help              print this message and exit" << std::endl;
+}
 
 int
 main(int argc, char** argv)
@@ -89,15 +104,33 @@ main(int argc, char** argv)
     {
         if (strcmp((const char *) argv[i], ARG_CFG_PATH) == 0)
         {
-            i++;
+            if (++i >= argc)
+            {
+                std::cerr << "Missing value for " << ARG_CFG_PATH << std::endl;
+                printUsage(std::cerr);
+                return -1;
+            }
             cfgPath = std::string(argv[i]);
         }
         else if (strcmp((const char *) argv[i], ARG_RUN_UNTIL) == 0)
         {
-            i++;
+            if (++i >= argc)
+            {
+                std::cerr << "Missing value for " << ARG_RUN_UNTIL << std::endl;
+                printUsage(std::cerr);
+                return -1;
+            }
             runUntil_sec = std::atoi(argv[i]);
         }
-        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0)
+        else if (strcmp((const char *) argv[i], ARG_HELP) == 0 ||
+                 strcmp((const char *) argv[i], ARG_HELP_LONG) == 0 ||
+                 strcmp((const char *) argv[i], ARG_HELP_SHORT) == 0)
+        {
+            printUsage(std::cout);
+            return 0;
+        }
+        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0 ||
+                 strcmp((const char *) argv[i], ARG_VERSION_LONG) == 0)
         {
             auto o = new afrl::cmasi::AirVehicleState;
             auto p = new afrl::impact::AreaOfInterest;
@@ -113,6 +146,7 @@ main(int argc, char** argv)
             std::cout << "#######################" << std::endl << std::endl;
             delete o;
             delete p;
+            return 0;
         }
         else
         {
