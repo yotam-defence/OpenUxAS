@@ -8,8 +8,8 @@ A scenario is a JSON (or YAML, when PyYAML is installed) document::
       "entity_id": 100,
       "startup_settle_ms": 1500,        # wait after launching a binary
       "config": {                       # XML config template per binary,
-        "ada": "smoke_heartbeat/ada.xml",   # relative to the scenario file
-        "cpp": "smoke_heartbeat/cpp.xml"
+        "ada": "smoke_heartbeat/config.xml",   # relative to the scenario file
+        "cpp": "smoke_heartbeat/config.xml"
       },
       "messages": [                     # ordered replay list
         {"type": "afrl.cmasi.KeyValuePair",

@@ -75,5 +75,5 @@ message, `include_descriptors`/`exclude_descriptors` globs), `canonical`,
 ## Layout
 
     difftest/{scenario,canon,comparators,report,golden,runner,cli}.py
-    difftest/scenarios/<name>.json, scenarios/<name>/{ada,cpp}.xml, scenarios/golden/
+    difftest/scenarios/<name>.json, scenarios/<name>/config.xml, scenarios/golden/
     difftest/tests/            pytest unit tests (no binaries)

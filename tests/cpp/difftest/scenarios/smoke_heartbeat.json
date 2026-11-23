@@ -4,8 +4,8 @@
   "entity_id": 100,
   "startup_settle_ms": 1500,
   "config": {
-    "ada": "smoke_heartbeat/ada.xml",
-    "cpp": "smoke_heartbeat/cpp.xml"
+    "ada": "smoke_heartbeat/config.xml",
+    "cpp": "smoke_heartbeat/config.xml"
   },
   "messages": [
     {"type": "afrl.cmasi.KeyValuePair", "fields": {"Key": "heartbeat", "Value": "1"}, "delay_ms": 200},
