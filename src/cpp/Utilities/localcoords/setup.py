@@ -2,7 +2,7 @@ from setuptools import setup, Extension
 
 module1 = Extension('LocalCoords',sources=['LocalCoordsModule.cpp',
                                            '../UnitConversions.cpp'],
-					extra_compile_args=['-std=c++11','-DLINUX'],
+					extra_compile_args=['-std=c++17','-DLINUX'],
                     include_dirs=['.', '../../Includes'])
 
 setup (name = 'LocalCoords',

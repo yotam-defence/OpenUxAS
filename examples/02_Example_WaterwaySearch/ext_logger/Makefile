@@ -2,7 +2,7 @@ SRCFILES=main.cpp
 
 CC=g++
 
-CFLAGS=-DLINUX -std=c++11 -Wall
+CFLAGS=-DLINUX -std=c++17 -Wall
 
 LDFLAGS=-static
 

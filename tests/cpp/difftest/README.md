@@ -35,6 +35,9 @@ the anod venv). Everything else is plain standard library; PyYAML is optional
 * `scenarios/golden/smoke_heartbeat.ada.json` is **hand-authored** (the
   expectation is "no reaction to bridge-only heartbeats"); replace it with a
   real recording (`--record-golden`) once `uxas-ada` is built.
+  Until then the smoke gate only verifies that the C++ binary starts, survives
+  the heartbeat sequence and emits no reactions; it does **not** prove Ada parity
+  (no Ada toolchain is available in the build sandbox).
 
 ## Scenario format (see `scenario.py` docstring)
 
