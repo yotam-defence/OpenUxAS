@@ -367,7 +367,10 @@ class ZmqProcessBackend(Backend):
         for s in (self.pub_sock, self.push_sock):
             if s is not None:
                 s.close(0)
+        # stop() may run again from error cleanup: leave nothing closed behind
+        self.pub_sock = self.push_sock = self.poller = None
         if self.ctx is not None:
             self.ctx.term()
+            self.ctx = None
         self.procs = []
         return rcs
