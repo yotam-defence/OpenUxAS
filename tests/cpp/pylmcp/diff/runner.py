@@ -134,9 +134,7 @@ def run_side(side: str, sc: Scenario, ctx: RunContext) -> Capture:
         ctx.log("[%s] %s" % (side, " ".join(argv)))
         if side == "ada":
             bus.open()           # Ada connects to sockets we must own
-            proc = ctx.launcher.start(argv, workdir, log_path)
-        else:
-            proc = ctx.launcher.start(argv, workdir, log_path)
+        proc = ctx.launcher.start(argv, workdir, log_path)
         wait(t.startup_ms)
         check_alive("during startup")
         if side != "ada":
