@@ -248,10 +248,10 @@ class ZmqProcessBackend(Backend):
         timing = self.scenario.timing
         self.deadline = time.monotonic() + timing["timeout_s"]
         cpp = find_binary(self.uxas_bin, "UXAS_CPP_BIN", ["uxas"])
-        if self.side == "ada" and self._bin_opts("ada").get("hub", "cpp") != "cpp":
+        ada_hub = self._bin_opts("ada").get("hub", "cpp")
+        if self.side == "ada" and ada_hub != "cpp":
             raise RunError("only binaries.ada.hub='cpp' is supported", "failure")
-        needs_cpp = (self.side == "cpp" or
-                     self._bin_opts("ada").get("hub", "cpp") == "cpp")
+        needs_cpp = self.side == "cpp" or ada_hub == "cpp"
         if needs_cpp:
             if not cpp:
                 raise RunError("C++ 'uxas' binary not found (use --cpp-bin or "
@@ -274,7 +274,7 @@ class ZmqProcessBackend(Backend):
                 self._launch("uxas", cpp, "cpp",
                              self._write_cfg("uxas.xml", xml))
             else:
-                if self._bin_opts("ada").get("hub", "cpp") == "cpp":
+                if ada_hub == "cpp":
                     hub = config.make_config(self.scenario, "ada", pub, pull,
                                              self.workdir,
                                              include_services=False)
