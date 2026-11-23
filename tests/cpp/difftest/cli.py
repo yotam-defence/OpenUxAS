@@ -5,7 +5,7 @@ import os
 import sys
 from typing import Any, Dict, List, Optional
 
-from difftest import __version__, comparators, golden, scenario as scn
+from difftest import __version__, comparators, golden, runner, scenario as scn
 from difftest.canon import CanonConfig, canonicalise, filter_capture
 from difftest.report import compare
 
@@ -29,7 +29,6 @@ def _obtain(sc, side, args, log):
     if use_golden:
         log("%s: using golden %s" % (side, gpath))
         return golden.load(gpath, sc.name)
-    from difftest import runner
     exe = runner.find_binary(side, getattr(args, side + "_bin"))
     if exe is None:
         raise runner.RunnerError(
@@ -44,53 +43,62 @@ def _obtain(sc, side, args, log):
     return capture
 
 
+def _load_scenario(args, required: bool = False) -> scn.Scenario:
+    """Load --scenario (or an ad-hoc one) and register its comparator plugins."""
+    sc = scn.load(args.scenario) if (required or args.scenario) else \
+        scn.Scenario(name="adhoc")
+    for p in list(sc.plugins) + list(getattr(args, "plugin", None) or []):
+        comparators.load_plugin(p)
+    return sc
+
+
+def _fail(e: Exception) -> int:
+    print("difftest: error: %s" % e, file=sys.stderr)
+    return EXIT_ERROR
+
+
+def _emit(report, args) -> int:
+    print(report.to_json() if args.format == "json" else report.to_text())
+    return EXIT_OK if report.passed else EXIT_DIFF
+
+
 def cmd_run(args) -> int:
     log = (lambda s: print("[difftest] " + s, file=sys.stderr))
     try:
-        sc = scn.load(args.scenario)
-        for p in list(sc.plugins) + list(args.plugin or []):
-            comparators.load_plugin(p)
+        sc = _load_scenario(args, required=True)
         ada = _obtain(sc, "ada", args, log)
         cpp = _obtain(sc, "cpp", args, log)
         report = compare(_canon(sc, ada), _canon(sc, cpp),
                          sc.comparators, sc.name)
     except Exception as e:  # scenario/golden/runner/comparator errors
-        print("difftest: error: %s" % e, file=sys.stderr)
-        return EXIT_ERROR
-    print(report.to_json() if args.format == "json" else report.to_text())
+        return _fail(e)
+    code = _emit(report, args)
     if args.report:
         with open(args.report, "w", encoding="utf-8") as fd:
             fd.write(report.to_json() + "\n")
-    return EXIT_OK if report.passed else EXIT_DIFF
+    return code
 
 
 def cmd_compare(args) -> int:
     """Compare two golden/capture files offline."""
     try:
-        sc = scn.load(args.scenario) if args.scenario else \
-            scn.Scenario(name="adhoc")
-        for p in list(sc.plugins) + list(args.plugin or []):
-            comparators.load_plugin(p)
+        sc = _load_scenario(args)
         ada = golden.load(args.ada)
         cpp = golden.load(args.cpp)
         report = compare(_canon(sc, ada), _canon(sc, cpp),
                          sc.comparators, sc.name)
     except Exception as e:
-        print("difftest: error: %s" % e, file=sys.stderr)
-        return EXIT_ERROR
-    print(report.to_json() if args.format == "json" else report.to_text())
-    return EXIT_OK if report.passed else EXIT_DIFF
+        return _fail(e)
+    return _emit(report, args)
 
 
 def cmd_canon(args) -> int:
     try:
-        sc = scn.load(args.scenario) if args.scenario else \
-            scn.Scenario(name="adhoc")
+        sc = _load_scenario(args)
         print(json.dumps(_canon(sc, golden.load(args.capture)), indent=2,
                          sort_keys=True))
     except Exception as e:
-        print("difftest: error: %s" % e, file=sys.stderr)
-        return EXIT_ERROR
+        return _fail(e)
     return EXIT_OK
 
 
@@ -122,8 +130,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--record-golden", action="store_true",
                    help="store the capture of every live run as golden")
     r.add_argument("--golden-dir", default=DEFAULT_GOLDEN_DIR)
-    r.add_argument("--pub", default="tcp://127.0.0.1:5560")
-    r.add_argument("--pull", default="tcp://127.0.0.1:5561")
+    r.add_argument("--pub", default=runner.DEFAULT_PUB)
+    r.add_argument("--pull", default=runner.DEFAULT_PULL)
     r.add_argument("--plugin", action="append",
                    help="python module registering comparators")
     r.add_argument("--format", choices=("text", "json"), default="text")
