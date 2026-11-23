@@ -7,6 +7,7 @@ from e3.os.process import Run
 
 import logging
 import os
+import re
 import sys
 
 
@@ -34,6 +35,12 @@ def check_common_tools() -> None:
     # The following variables are used to force recompilation
     # in case of some tool change.
     gcc_version = check_tool("gcc")
+    # OpenUxAS is built as C++17: GCC 11+ (or Clang 14+) is required
+    m = re.search(r"(\d+)\.\d+\.\d+\s*(\d+)?$", gcc_version.strip())
+    if m and int(m.group(1)) < 11:
+        logging.warning(
+            "gcc %s found but GCC 11 or later is required for C++17",
+            m.group(1))
     os.environ["OPENUXAS_COMPILER_VERSION"] = gcc_version
     cmake_version = check_tool("cmake")
     os.environ["OPENUXAS_CMAKE_VERSION"] = cmake_version

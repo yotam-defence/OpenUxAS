@@ -29,6 +29,8 @@
 //#include "UxAS_SerialPortEmulator.h"
 #endif
 
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -41,6 +43,10 @@
 
 #define ARG_CFG_PATH "-cfgPath"
 #define ARG_VERSION "-version"
+#define ARG_VERSION_LONG "--version"
+#define ARG_HELP "-help"
+#define ARG_HELP_LONG "--help"
+#define ARG_HELP_SHORT "-h"
 #define ARG_RUN_UNTIL "-runUntil"
 
 #define MAJOR_VERSION "3"
@@ -48,6 +54,16 @@
 #define PATCH_VERSION "0"
 
 #define BEFORE_LOG_MANAGER_INITIALIZATION_LOG_MESSAGE(message) std::cout << message << std::endl; std::cout.flush();
+
+static void printUsage(const char* programName)
+{
+    std::cout << "Usage: " << programName << " [options]" << std::endl;
+    std::cout << "Options:" << std::endl;
+    std::cout << "  " << ARG_CFG_PATH << " <file>       path to the base XML configuration (default: cfg.xml)" << std::endl;
+    std::cout << "  " << ARG_RUN_UNTIL << " <seconds>   run for the given number of seconds then shut down" << std::endl;
+    std::cout << "  " << ARG_VERSION << ", " << ARG_VERSION_LONG << "   print version information and exit" << std::endl;
+    std::cout << "  " << ARG_HELP << ", " << ARG_HELP_LONG << ", " << ARG_HELP_SHORT << "   print this help and exit" << std::endl;
+}
 
 #ifdef GCOV_MODE
 extern "C" void __gcov_dump();
@@ -89,15 +105,31 @@ main(int argc, char** argv)
     {
         if (strcmp((const char *) argv[i], ARG_CFG_PATH) == 0)
         {
+            if (i + 1 >= argc)
+            {
+                std::cerr << "Missing value for argument " << argv[i] << std::endl;
+                return -1;
+            }
             i++;
             cfgPath = std::string(argv[i]);
         }
         else if (strcmp((const char *) argv[i], ARG_RUN_UNTIL) == 0)
         {
+            if (i + 1 >= argc)
+            {
+                std::cerr << "Missing value for argument " << argv[i] << std::endl;
+                return -1;
+            }
             i++;
             runUntil_sec = std::atoi(argv[i]);
         }
-        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0)
+        else if (strcmp(argv[i], ARG_HELP) == 0 || strcmp(argv[i], ARG_HELP_LONG) == 0
+                || strcmp(argv[i], ARG_HELP_SHORT) == 0)
+        {
+            printUsage(argv[0]);
+            return EXIT_SUCCESS;
+        }
+        else if (strcmp(argv[i], ARG_VERSION) == 0 || strcmp(argv[i], ARG_VERSION_LONG) == 0)
         {
             auto o = new afrl::cmasi::AirVehicleState;
             auto p = new afrl::impact::AreaOfInterest;
@@ -113,6 +145,7 @@ main(int argc, char** argv)
             std::cout << "#######################" << std::endl << std::endl;
             delete o;
             delete p;
+            return EXIT_SUCCESS;
         }
         else
         {

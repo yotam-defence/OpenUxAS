@@ -46,11 +46,15 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 		     $(SOURCE_DIR)/VisilibityLib \
 	  	     resources/AutomationDiagramDataService
 
+# C++ compiler executable (g++ >= 11 or clang++ >= 14, C++17 required).
+# Can be overridden from the command line or the environment, e.g. CXX_BIN=clang++
+CXX_BIN?=g++
+
 # Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+CXX=$(ANODENV)$(CXX_BIN)
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
@@ -73,11 +77,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -135,16 +139,20 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
-	@echo "   clean: Clean all build artefacts"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   clean: Clean all build artefacts (including unit tests)"
 	@echo "   help:  This target"
 	@echo
 	@echo "User variables:"
 	@echo "   DEBUG_BUILD: if 'true' then display full compilation command line"
+	@echo "   CXX_BIN: C++ compiler executable, g++ (default) or clang++; C++17 required"
 	@echo "   OBJECT_DIR: root directory containing objects and executable (default: 'obj')"
 	@echo "   ENABLE_WARNINGS: if 'true' enable all C++ warnings"
 	@echo "   ENABLE_COVERAGE: if 'true' compile uxas with gcov enabled"
+	@echo "   UNIT_TEST_ARGS: arguments for the unit test binary (e.g. --gtest_filter=ByteBuffer.*)"
+	@echo "   GTEST_SRC_DIR: GoogleTest sources used when no system libgtest is usable"
 
-clean:
+clean: clean_unit_tests
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
@@ -164,6 +172,9 @@ $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
+
+# Unit tests (GoogleTest): 'test' target
+include tests/cpp/unit/unit_tests.mk
 
 # Include the Makefile fragments containing the dependencies
 -include $(DEPS)

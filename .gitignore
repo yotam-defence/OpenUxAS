@@ -78,3 +78,17 @@ uxas-ada
 tests/cpp/log
 tests/cpp/results
 tests/proof/out
+
+# C++ build output and unit tests (tests/cpp/unit -> $(OBJECT_DIR)/unit*)
+obj/
+tests/cpp/unit/*.o
+tests/cpp/unit/*.d
+tests/cpp/unit/unit_tests
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo

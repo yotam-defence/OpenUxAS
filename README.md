@@ -173,3 +173,10 @@ For example, passing `-vv` to the provided `anod` command will cause each comman
     OpenUxAS$ ./anod -vv build
 
 These commands can be entered manually, hopefully allowing problems to be identified and worked around.
+
+## Building and testing the C++ `uxas`
+
+OpenUxAS C++ is built as C++17 (GCC 11+ or Clang 14+; select with `CXX_BIN=clang++`).
+
+- `./uxas -version` (or `--version`) prints the version and exits; `./uxas -help` (or `--help`, `-h`) prints usage.
+- `make test` builds and runs the GoogleTest unit tests, see `tests/cpp/unit/README.md`.

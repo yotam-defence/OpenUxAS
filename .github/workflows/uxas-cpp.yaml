@@ -33,6 +33,10 @@ jobs:
                 ]
                 component: [uxas]
                 qualifier: [scenario=release, scenario=gcov]
+                # C++17 is required: GCC 11+ and Clang 14+
+                compiler: [gcc, clang]
+        env:
+            CXX_BIN: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
         runs-on: ${{ matrix.env.os }}
         steps:
             - uses: actions/checkout@v4
@@ -50,6 +54,15 @@ jobs:
                   java-version: '11'
                   distribution: 'adopt'
 
+            - name: Install C++ toolchain and GoogleTest
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtest-dev
+                  if [ "${{ matrix.compiler }}" = "clang" ]; then
+                      sudo apt-get install -y clang
+                  fi
+                  ${CXX_BIN} --version
+
             - name: Install infrastructure
               run: |
                   cd OpenUxAS
@@ -59,6 +72,11 @@ jobs:
               run: |
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Run C++ unit tests (GoogleTest)
+              run: |
+                  cd OpenUxAS
+                  make test
 
             - name: Test OpenUxAS C++
               run: |

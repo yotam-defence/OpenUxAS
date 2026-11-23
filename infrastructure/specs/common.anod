@@ -110,7 +110,7 @@ class Common(Anod):
 
         # Compute cmake command line
         cmake_cmd = ['cmake']
-        cmake_cmd.append('-DCMAKE_CXX_FLAGS=-std=c++11')
+        cmake_cmd.append('-DCMAKE_CXX_FLAGS=-std=c++17')
         if params:
             for var, value in params.items():
                 cmake_cmd.append('-D%s=%s' % (var, value))
