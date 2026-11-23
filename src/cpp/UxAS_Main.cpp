@@ -34,6 +34,8 @@
 #include <string>
 #include <thread>
 #include <locale>
+#include <cstring>
+#include <cstdlib>
 
 #ifdef GCOV_MODE
 #include <csignal>
@@ -41,6 +43,9 @@
 
 #define ARG_CFG_PATH "-cfgPath"
 #define ARG_VERSION "-version"
+#define ARG_VERSION_LONG "--version"
+#define ARG_HELP "--help"
+#define ARG_HELP_SHORT "-help"
 #define ARG_RUN_UNTIL "-runUntil"
 
 #define MAJOR_VERSION "3"
@@ -97,7 +102,16 @@ main(int argc, char** argv)
             i++;
             runUntil_sec = std::atoi(argv[i]);
         }
-        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0)
+        else if (strcmp(argv[i], ARG_HELP) == 0 || strcmp(argv[i], ARG_HELP_SHORT) == 0)
+        {
+            std::cout << "Usage: " << argv[0] << " [-cfgPath <file>] [-runUntil <seconds>] [-version|--version] [--help]" << std::endl;
+            std::cout << "  -cfgPath <file>    base XML configuration file (default: cfg.xml)" << std::endl;
+            std::cout << "  -runUntil <sec>    run for the given number of seconds" << std::endl;
+            std::cout << "  -version           print version information and exit" << std::endl;
+            std::cout << "  --help             print this message and exit" << std::endl;
+            return EXIT_SUCCESS;
+        }
+        else if (strcmp(argv[i], ARG_VERSION) == 0 || strcmp(argv[i], ARG_VERSION_LONG) == 0)
         {
             auto o = new afrl::cmasi::AirVehicleState;
             auto p = new afrl::impact::AreaOfInterest;
@@ -113,6 +127,7 @@ main(int argc, char** argv)
             std::cout << "#######################" << std::endl << std::endl;
             delete o;
             delete p;
+            return EXIT_SUCCESS;
         }
         else
         {

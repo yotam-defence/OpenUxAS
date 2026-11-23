@@ -282,3 +282,12 @@ The only action left is waiting for the corresponding
 After executing the test, gcov and lcov can generate a coverage report
  that will point to the unread lines. It is possible to create as many
  tests as needed to cover the entire file.
+
+
+# C++ unit tests (GoogleTest)
+
+`tests/cpp/unit/` holds GoogleTest unit tests, built and run with `make test`
+from the repository root (binary: `obj/cpp/unit_tests`). GoogleTest is taken
+from the system package `libgtest-dev` rather than built with an anod spec or
+vendored; see `tests/cpp/unit/README.md` for the rationale and the test
+conventions (no `main()`, one `test_<topic>.cpp` per unit).

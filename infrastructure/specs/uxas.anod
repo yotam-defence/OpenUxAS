@@ -72,6 +72,9 @@ class Uxas(spec('common')):
         make = Make(self,
                     exec_dir=self.build_space.src_dir)
         make.set_var('OBJECT_DIR', self.build_space.build_dir)
+        # C++17 compiler driver: g++ (GCC >= 11) by default, or e.g.
+        # UXAS_CXX=clang++-14 (Clang >= 14) in the environment.
+        make.set_var('CXX_COMPILER', os.environ.get('UXAS_CXX', 'g++'))
         if self.scenario == 'gcov':
             make.set_var('ENABLE_COVERAGE', 'true')
             make.set_var('DEBUG_BUILD', 'true')

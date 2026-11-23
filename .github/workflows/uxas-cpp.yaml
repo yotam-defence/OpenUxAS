@@ -31,6 +31,7 @@ jobs:
                     {os: ubuntu-22.04, python: '3.10'},
                     {os: ubuntu-24.04, python: '3.12'}
                 ]
+                compiler: [gcc, clang]
                 component: [uxas]
                 qualifier: [scenario=release, scenario=gcov]
         runs-on: ${{ matrix.env.os }}
@@ -50,6 +51,19 @@ jobs:
                   java-version: '11'
                   distribution: 'adopt'
 
+            - name: Install C++17 toolchain and GoogleTest
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtest-dev
+                  if [ "${{ matrix.compiler }}" = "clang" ]; then
+                      sudo apt-get install -y clang-14
+                      echo "UXAS_CXX=clang++-14" >> "$GITHUB_ENV"
+                  else
+                      # GCC >= 11 is required for C++17
+                      sudo apt-get install -y g++-11
+                      echo "UXAS_CXX=g++-11" >> "$GITHUB_ENV"
+                  fi
+
             - name: Install infrastructure
               run: |
                   cd OpenUxAS
@@ -59,6 +73,17 @@ jobs:
               run: |
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Run C++ unit tests (make test)
+              run: |
+                  cd OpenUxAS
+                  # The Makefile picks up the anod build environment itself
+                  make test CXX_COMPILER="$UXAS_CXX"
+
+            - name: Differential harness smoke test
+              run: |
+                  cd OpenUxAS
+                  python3 tests/cpp/differential/run_differential.py --self-test
 
             - name: Test OpenUxAS C++
               run: |
