@@ -26,7 +26,32 @@ class Bus:
     def close(self) -> None: ...
 
 
-class ClientBus(Bus):
+class _ZmqBus(Bus):
+    ctx = None
+
+    def _sockets(self):
+        """Sockets owned by this bus (entries may be None)."""
+        raise NotImplementedError
+
+    def close(self) -> None:
+        for s in self._sockets():
+            if s is not None:
+                s.close(linger=0)
+        if self.ctx is not None:
+            self.ctx.term()
+
+
+def _drain(sock):
+    """Yield frames from sock until it would block."""
+    import zmq
+    while True:
+        try:
+            yield sock.recv(zmq.NOBLOCK)
+        except zmq.Again:
+            return
+
+
+class ClientBus(_ZmqBus):
     def __init__(self, sub_url: str, push_url: str) -> None:
         self.sub_url, self.push_url = sub_url, push_url
         self.ctx = self.sub = self.push = None
@@ -43,26 +68,16 @@ class ClientBus(Bus):
     def inject(self, frame: bytes) -> None:
         self.push.send(frame)
 
+    def _sockets(self):
+        return (self.sub, self.push)
+
     def poll(self) -> List[bytes]:
-        import zmq
-        out = []
         if self.sub is None:       # not opened yet (startup wait)
-            return out
-        while True:
-            try:
-                out.append(self.sub.recv(zmq.NOBLOCK))
-            except zmq.Again:
-                return out
-
-    def close(self) -> None:
-        for s in (self.sub, self.push):
-            if s is not None:
-                s.close(linger=0)
-        if self.ctx is not None:
-            self.ctx.term()
+            return []
+        return list(_drain(self.sub))
 
 
-class HubBus(Bus):
+class HubBus(_ZmqBus):
     def __init__(self, pub_url: str, pull_url: str) -> None:
         self.pub_url, self.pull_url = pub_url, pull_url
         self.ctx = self.pub = self.pull = None
@@ -79,37 +94,22 @@ class HubBus(Bus):
     def inject(self, frame: bytes) -> None:
         self.pub.send(frame)
 
+    def _sockets(self):
+        return (self.pub, self.pull)
+
     def _drain_subscriptions(self) -> None:
-        import zmq
-        while True:
-            try:
-                ev = self.pub.recv(zmq.NOBLOCK)
-            except zmq.Again:
-                return
-            if ev[:1] == b"\x01":
-                self._subs += 1
+        self._subs += sum(1 for ev in _drain(self.pub) if ev[:1] == b"\x01")
 
     def subscribers_seen(self) -> int:
         self._drain_subscriptions()
         return self._subs
 
     def poll(self) -> List[bytes]:
-        import zmq
-        out = []
         if self.pub is None:
-            return out
+            return []
         self._drain_subscriptions()
-        while True:
-            try:
-                f = self.pull.recv(zmq.NOBLOCK)
-            except zmq.Again:
-                return out
+        out = []
+        for f in _drain(self.pull):
             self.pub.send(f)          # relay like the C++ bridge does
             out.append(f)
-
-    def close(self) -> None:
-        for s in (self.pub, self.pull):
-            if s is not None:
-                s.close(linger=0)
-        if self.ctx is not None:
-            self.ctx.term()
+        return out
