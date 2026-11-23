@@ -1,0 +1,76 @@
+{
+ "fingerprint": "76cd43270693be9619d9bf651642d244fabffce53918ae013d042903d3c2eca8",
+ "format": 1,
+ "messages": [
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "seq-0"
+   },
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "t_ms": 302.19244956970215
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "seq-1"
+   },
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "t_ms": 402.73070335388184
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "seq-2"
+   },
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "t_ms": 502.87508964538574
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "seq-3"
+   },
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "t_ms": 603.5025119781494
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "seq-4"
+   },
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "t_ms": 703.7029266357422
+  }
+ ],
+ "note": "PROVISIONAL reference: recorded from the C++ uxas binary, NOT from uxas_ada. It only guards against C++ regressions. Re-record from Ada with --record-golden once the Ada toolchain (GNAT/Alire) is available.",
+ "provisional": true,
+ "recorded_from": "cpp",
+ "scenario": "heartbeat_smoke",
+ "side": "ada"
+}

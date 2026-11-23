@@ -28,6 +28,10 @@ def build_parser():
                         "record it when an Ada binary is available and none exists")
     p.add_argument("--record-golden", action="store_true",
                    help="force a live Ada run and (over)write the golden file")
+    p.add_argument("--record-provisional-golden", action="store_true",
+                   help="record the golden file from the C++ binary (needs --cpp-bin and "
+                        "--golden); flagged provisional in its metadata, to be replaced by "
+                        "--record-golden once uxas_ada is available")
     p.add_argument("--allow-stale", action="store_true",
                    help="accept golden files whose scenario fingerprint changed")
     p.add_argument("--compare-files", nargs=2, metavar=("ADA_JSON", "CPP_JSON"),
@@ -84,6 +88,14 @@ def main(argv=None, launcher=None, transport_factory=None, out=None):
         if args.compare_files:
             ada_raw, cpp_raw = (_load_raw(f) for f in args.compare_files)
             notes.append("compared pre-recorded capture files")
+        elif args.record_provisional_golden:
+            if not (args.cpp_bin and args.golden):
+                sys.stderr.write("error: --record-provisional-golden needs --cpp-bin and --golden\n")
+                return EXIT_USAGE
+            path = runner.record_provisional(sc, args.cpp_bin, args.golden,
+                                             launcher, transport_factory)
+            out.write("Recorded PROVISIONAL golden (from C++, not Ada): %s\n" % path)
+            return EXIT_MATCH
         else:
             ada_raw, notes = runner.obtain_ada(
                 sc, args.ada_bin, args.cpp_bin, args.golden, args.record_golden,

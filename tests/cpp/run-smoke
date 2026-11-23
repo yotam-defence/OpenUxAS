@@ -1,0 +1,46 @@
+#!/bin/bash
+# Smoke differential run (heartbeat KeyValuePair sequence) used by `make test`.
+#
+#   * Ada reference available (UXAS_ADA_BIN, or a built src/ada/uxas-ada):
+#     run live against uxas_ada and compare with the C++ binary.
+#   * Otherwise: compare against the committed golden file
+#     tests/cpp/difftool/golden/heartbeat_smoke.ada.golden.json. Until the Ada
+#     toolchain was available that file is PROVISIONAL (recorded from C++, see
+#     difftool/README.md); this mode is a C++ regression check, not Ada parity.
+#
+# Environment: UXAS_ADA_BIN (Ada executable), UXAS_CPP_BIN (default
+# <OBJECT_DIR>/uxas), UXAS_SMOKE_PYTHON (python with pyzmq + e3-core).
+# Usage: run-smoke [OBJECT_DIR]
+set -u
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
+OBJECT_DIR="${1:-${OBJECT_DIR:-obj}}"
+CPP_BIN="${UXAS_CPP_BIN:-$OBJECT_DIR/uxas}"
+SCEN="$HERE/difftool/scenarios/heartbeat_smoke.json"
+GOLDEN="$HERE/difftool/golden"
+PY="${UXAS_SMOKE_PYTHON:-python3}"
+
+# Live replay needs pyzmq and e3-core (pylmcp). If the interpreter lacks them,
+# provision a private virtualenv under OBJECT_DIR (pip, no system changes).
+if ! "$PY" -c 'import zmq, e3' >/dev/null 2>&1; then
+    VENV="$OBJECT_DIR/smoke-venv"
+    if [ ! -x "$VENV/bin/python3" ] || ! "$VENV/bin/python3" -c 'import zmq, e3' >/dev/null 2>&1; then
+        echo "[Smoke: creating virtualenv $VENV with pyzmq and e3-core]"
+        python3 -m venv "$VENV" && "$VENV/bin/pip" install -q pyzmq e3-core \
+            || { echo "smoke: cannot provision pyzmq/e3-core (set UXAS_SMOKE_PYTHON)" >&2; exit 3; }
+    fi
+    PY="$VENV/bin/python3"
+fi
+
+[ -x "$CPP_BIN" ] || { echo "smoke: C++ binary not found: $CPP_BIN (run 'make all')" >&2; exit 3; }
+
+ADA_BIN="${UXAS_ADA_BIN:-}"
+[ -z "$ADA_BIN" ] && [ -x "$ROOT/src/ada/uxas-ada" ] && ADA_BIN="$ROOT/src/ada/uxas-ada"
+
+if [ -n "$ADA_BIN" ]; then
+    echo "[Smoke differential run: live Ada reference ($ADA_BIN)]"
+    exec "$PY" -B "$HERE/run-diff" --scenario "$SCEN" --ada-bin "$ADA_BIN" --cpp-bin "$CPP_BIN"
+fi
+echo "[Smoke differential run: no Ada binary (UXAS_ADA_BIN unset, src/ada/uxas-ada not built);"
+echo " using committed golden file - PROVISIONAL if recorded from C++, see tests/cpp/difftool/README.md]"
+exec "$PY" -B "$HERE/run-diff" --scenario "$SCEN" --cpp-bin "$CPP_BIN" --golden "$GOLDEN"

@@ -60,9 +60,11 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
-            - name: Unit test OpenUxAS C++ (GoogleTest)
+            - name: Test OpenUxAS C++ (make test: GoogleTest, difftool self-test, heartbeat smoke diff)
               run: |
                   cd OpenUxAS
+                  # runs `make test`; the smoke diff uses the committed provisional
+                  # golden since CI has no Ada binary (set UXAS_ADA_BIN to go live)
                   ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
             - name: Test OpenUxAS C++

@@ -142,6 +142,26 @@ class RunnerTests(unittest.TestCase):
             self.assertEqual(len(L.procs), n_procs)  # no new process
             self.assertTrue(any("golden file" in n for n in notes2))
 
+    def test_provisional_golden_is_flagged_and_usable(self):
+        with tmpdir() as d, tmpdir() as g:
+            s = scenario.load(write_scenario(d))
+            L = FakeLauncher()
+            path = runner.record_provisional(s, "/cpp", g, L, FakeTransport, self.nosleep)
+            doc = json.load(open(path))
+            self.assertTrue(doc["provisional"])
+            self.assertEqual(doc["recorded_from"], "cpp")
+            self.assertIn("PROVISIONAL", doc["note"])
+            raw, notes = runner.obtain_ada(s, None, None, g, False, False, L, FakeTransport, self.nosleep)
+            self.assertTrue(any("PROVISIONAL" in n for n in notes))
+
+    def test_real_golden_is_not_provisional(self):
+        with tmpdir() as g:
+            path = golden.save(g, "x", "fp", [])
+            doc = json.load(open(path))
+            self.assertFalse(doc["provisional"])
+            self.assertEqual(doc["recorded_from"], "ada")
+            self.assertNotIn("note", doc)
+
     def test_obtain_ada_without_anything(self):
         with tmpdir() as d:
             s = scenario.load(write_scenario(d))

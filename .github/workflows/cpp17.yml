@@ -1,20 +1,22 @@
 # Build OpenUxAS C++ with -std=c++17 using both gcc and clang and run the
 # GoogleTest unit tests (make test). Dependencies are built by anod; GoogleTest
 # comes from the system package libgtest-dev (installed by the infrastructure
-# install script).
+# install script). `make test` also runs the difftool self-test and the
+# heartbeat smoke differential run (tests/cpp/run-smoke; no Ada toolchain in
+# CI, so it compares against the committed provisional golden file).
 on:
     push:
         paths:
             - 'Makefile'
             - 'src/cpp/**'
-            - 'tests/cpp/unit/**'
+            - 'tests/cpp/**'
             - 'infrastructure/**'
             - '.github/workflows/cpp17.yml'
     pull_request:
         paths:
             - 'Makefile'
             - 'src/cpp/**'
-            - 'tests/cpp/unit/**'
+            - 'tests/cpp/**'
             - 'infrastructure/**'
             - '.github/workflows/cpp17.yml'
     workflow_dispatch:
@@ -58,7 +60,7 @@ jobs:
                   infrastructure/install -vv --no-gnat --no-java -y
 
             # Builds all dependencies (and uxas itself) with gcc through anod
-            - name: Build with gcc and run unit tests
+            - name: Build with gcc and run tests (unit, difftool self-test, smoke diff)
               if: matrix.compiler == 'gcc'
               run: |
                   cd OpenUxAS
@@ -66,7 +68,7 @@ jobs:
                   ./anod -v test uxas
 
             # Re-use the anod dependency environment but compile with clang
-            - name: Build with clang and run unit tests
+            - name: Build with clang and run tests (unit, difftool self-test, smoke diff)
               if: matrix.compiler == 'clang'
               run: |
                   cd OpenUxAS

@@ -86,7 +86,8 @@ class Uxas(spec('common')):
 
     @Anod.primitive()
     def test(self):
-        """Build and run the GoogleTest unit tests (tests/cpp/unit).
+        """Run `make test`: GoogleTest unit tests (tests/cpp/unit), the
+        difftool self-test and the heartbeat smoke differential run.
 
         Requires the system package libgtest-dev (see tests/cpp/README.md).
         """

@@ -124,10 +124,14 @@ def obtain_ada(scenario, ada_bin, cpp_bin, golden_dir, record, allow_stale,
     fp = scenario.reference_fingerprint()
     if golden_dir and not record:
         try:
-            msgs = golden.load(golden_dir, scenario.name, fp, allow_stale)
+            doc = golden.load_doc(golden_dir, scenario.name, fp, allow_stale)
             notes.append("Ada reference from golden file %s"
                          % golden.golden_path(golden_dir, scenario.name))
-            return msgs, notes
+            if golden.is_provisional(doc):
+                notes.append("WARNING: golden file is PROVISIONAL (recorded from "
+                             "the C++ binary, not uxas_ada); this run is a C++ "
+                             "regression check, not Ada parity")
+            return doc["messages"], notes
         except golden.GoldenMissing:
             if not ada_bin:
                 raise
@@ -143,3 +147,12 @@ def obtain_ada(scenario, ada_bin, cpp_bin, golden_dir, record, allow_stale,
         path = golden.save(golden_dir, scenario.name, fp, msgs)
         notes.append("recorded golden file %s" % path)
     return msgs, notes
+
+
+def record_provisional(scenario, cpp_bin, golden_dir, launcher, transport_factory,
+                       sleep=time.sleep):
+    """Record a provisional golden file from the C++ binary (no Ada toolchain)."""
+    msgs = run_side(scenario, "cpp", cpp_bin, launcher, transport_factory, sleep)
+    path = golden.save(golden_dir, scenario.name, scenario.reference_fingerprint(),
+                       msgs, recorded_from="cpp")
+    return path

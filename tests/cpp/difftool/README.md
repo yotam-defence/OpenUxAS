@@ -23,6 +23,7 @@ tests/cpp/run-diff --scenario FILE [--ada-bin PATH] [--cpp-bin PATH] [--golden D
 | `--ada-bin`, `--cpp-bin` | Executables. Both are launched as `BIN -cfgPath CFG.xml`. |
 | `--golden DIR` | Golden-file directory. A valid golden file replaces the live Ada run. If none exists and `--ada-bin` is given, the reference is recorded. |
 | `--record-golden` | Force a live Ada run and overwrite the golden file. Without `--cpp-bin` it only records. |
+| `--record-provisional-golden` | Record the golden file from the **C++** binary (needs `--cpp-bin`, `--golden`); flagged provisional in its metadata. Only for use when `uxas_ada` is unavailable. |
 | `--allow-stale` | Accept a golden file whose fingerprint no longer matches. |
 | `--compare-files ADA.json CPP.json` | Compare two raw capture files; no binaries needed. |
 | `--save-captures DIR` | Write raw captures as `ada.json` / `cpp.json`. |
@@ -43,6 +44,46 @@ tests/cpp/run-diff --scenario S.json --ada-bin uxas_ada --cpp-bin uxas --golden 
 # CI without Ada: compare C++ against the cached reference
 tests/cpp/run-diff --scenario S.json --cpp-bin uxas --golden tests/cpp/difftool/golden
 ```
+
+## `make test` and the smoke run
+
+`make test` runs the GoogleTest binary, `run-diff --selftest` and
+`tests/cpp/run-smoke` (the `heartbeat_smoke` scenario against the built
+`obj/cpp/uxas`). `run-smoke` picks the Ada reference as follows:
+
+1. **Live Ada**: if `UXAS_ADA_BIN` is set (or `src/ada/uxas-ada` is built), the
+   scenario runs against `uxas_ada` and the C++ binary (real parity check).
+2. **Golden file** otherwise: the committed
+   `golden/heartbeat_smoke.ada.golden.json` is used.
+
+`run-smoke` needs `pyzmq` and `e3-core`; if the interpreter lacks them it
+creates a virtualenv in `OBJECT_DIR/smoke-venv` (override the interpreter with
+`UXAS_SMOKE_PYTHON`).
+
+### The committed golden is PROVISIONAL
+
+No Ada toolchain (GNAT/Alire, `uxas_ada`) was available when this was added, so
+the golden file was **not** recorded from Ada. It was recorded from the C++
+binary with
+
+```
+tests/cpp/run-diff --scenario difftool/scenarios/heartbeat_smoke.json \
+    --cpp-bin obj/cpp/uxas --golden difftool/golden --record-provisional-golden
+```
+
+and its metadata says so (`"recorded_from": "cpp"`, `"provisional": true`, plus
+a `note`); every run that uses it prints a `WARNING: golden file is PROVISIONAL`
+note. In this mode the smoke step is a C++ regression/determinism check of the
+bridge echo path, **not** Ada parity evidence. Once the Ada toolchain is
+available, replace it with a real reference and commit the result:
+
+```
+tests/cpp/run-diff --scenario difftool/scenarios/heartbeat_smoke.json \
+    --ada-bin "$UXAS_ADA_BIN" --cpp-bin obj/cpp/uxas \
+    --golden difftool/golden --record-golden
+```
+
+A real recording sets `"provisional": false, "recorded_from": "ada"`.
 
 ## Topology
 
@@ -181,8 +222,8 @@ pylmcp, lazy), `cli.py`, `tests/`, `scenarios/`.
 
 ## Known limitations
 
-* Live replay was not exercised in this environment (no `e3`, `pyzmq`, built
-  binaries or Ada toolchain); it is covered through fakes only.
+* The Ada side has never been exercised live (no Ada toolchain so far); the
+  committed golden is provisional (see above). The C++ side runs live.
 * The Ada binary requires a C++ hub, so `--cpp-bin` is needed for the Ada side
   when `ada_hub_cfg` is used.
 * Window alignment between sides is by index (see design decisions).

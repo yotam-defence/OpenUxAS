@@ -29,11 +29,23 @@ def golden_path(directory, scenario_name):
     return os.path.join(directory, safe + ".ada.golden.json")
 
 
-def save(directory, scenario_name, fingerprint, messages):
+PROVISIONAL_NOTE = ("PROVISIONAL reference: recorded from the C++ uxas binary, "
+                    "NOT from uxas_ada. It only guards against C++ regressions. "
+                    "Re-record from Ada with --record-golden once the Ada "
+                    "toolchain (GNAT/Alire) is available.")
+
+
+def save(directory, scenario_name, fingerprint, messages, recorded_from="ada"):
+    """Write a golden file.  ``recorded_from`` is ``"ada"`` (a real reference)
+    or ``"cpp"`` (provisional stand-in, clearly flagged in the metadata)."""
     os.makedirs(directory, exist_ok=True)
     path = golden_path(directory, scenario_name)
     doc = {"format": FORMAT, "scenario": scenario_name, "side": "ada",
+           "recorded_from": recorded_from,
+           "provisional": recorded_from != "ada",
            "fingerprint": fingerprint, "messages": messages}
+    if doc["provisional"]:
+        doc["note"] = PROVISIONAL_NOTE
     tmp = path + ".tmp"
     with open(tmp, "w") as fd:
         json.dump(doc, fd, indent=1, sort_keys=True)
@@ -43,6 +55,14 @@ def save(directory, scenario_name, fingerprint, messages):
 
 
 def load(directory, scenario_name, fingerprint=None, allow_stale=False):
+    return load_doc(directory, scenario_name, fingerprint, allow_stale)["messages"]
+
+
+def is_provisional(doc):
+    return bool(doc.get("provisional")) or doc.get("recorded_from", "ada") != "ada"
+
+
+def load_doc(directory, scenario_name, fingerprint=None, allow_stale=False):
     path = golden_path(directory, scenario_name)
     if not os.path.isfile(path):
         raise GoldenMissing("no golden file: %s" % path)
@@ -56,4 +76,4 @@ def load(directory, scenario_name, fingerprint=None, allow_stale=False):
     if fingerprint is not None and doc.get("fingerprint") != fingerprint and not allow_stale:
         raise GoldenStale("golden file %s is stale (scenario or Ada config changed); "
                           "re-record with --record-golden or pass --allow-stale" % path)
-    return doc["messages"]
+    return doc

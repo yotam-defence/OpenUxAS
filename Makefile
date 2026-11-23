@@ -164,9 +164,15 @@ UNIT_TEST_LIBS:=-lgtest_main -lgtest -llmcp -lpthread
 
 .PHONY: all test clean help
 
-test: $(UNIT_TEST_BIN)
+# `make test` = GoogleTest unit tests + difftool self-test + smoke differential
+# run (heartbeat KeyValuePair sequence, uxas vs. Ada reference or committed
+# golden; see tests/cpp/difftool/README.md). Needs the uxas binary.
+test: $(UNIT_TEST_BIN) $(OBJECT_DIR)/uxas
 	@echo "[Run unit tests]"
 	@$(UNIT_TEST_BIN)
+	@echo "[Run differential harness self-test]"
+	@python3 -B tests/cpp/run-diff --selftest
+	@tests/cpp/run-smoke $(OBJECT_DIR)
 
 $(OBJECT_DIR)/cpp/unit/%.o: $(UNIT_TEST_DIR)/%.cpp
 	@mkdir -p `dirname $@`
