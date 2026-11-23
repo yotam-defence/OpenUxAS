@@ -49,7 +49,7 @@ The reference is chosen in this order:
 1. real Ada: `$UXAS_ADA_BIN`, else `uxas_ada` on `PATH` -> full comparison;
 2. golden file `golden/heartbeat.ada.json` (override with `$UXAS_GOLDEN`) ->
    comparison against the recorded Ada output (stale/corrupt golden = exit 4);
-3. neither -> `--cpp-only`.
+3. neither -> `--cpp-only`, unless `UXAS_REQUIRE_PARITY=1` is set, in which case `smoke.sh` exits `4`.
 
 `--cpp-only` runs only the C++ side, twice, and checks: both runs are clean
 (no crash/unclean exit), the comparator-selected capture is non-empty with no
@@ -191,7 +191,7 @@ replay, capture, normalise). `--golden` refuses files for another scenario or
 a changed scenario (exit 4) unless `--ignore-golden-digest`. Record goldens on
 a machine with the Ada toolchain and commit them (for the smoke test:
 `--record-golden golden/heartbeat.ada.json --record-only`); CI without
-Alire/GNAT uses `--golden`. No golden is committed yet (needs the Ada binary).
+Alire/GNAT uses `--golden`. No golden is committed yet (needs the Ada binary); on a machine with Ada run `python3 run_differential.py scenarios/heartbeat.json --record-golden golden/heartbeat.ada.json --record-only` and commit it, then set `UXAS_REQUIRE_PARITY=1` in CI.
 
 ## Extending for milestones 2-7
 

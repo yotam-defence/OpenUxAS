@@ -84,7 +84,9 @@ jobs:
                   # `make test` = GoogleTest suite + `make test-differential`:
                   # compares against uxas_ada ($UXAS_ADA_BIN or PATH) if present,
                   # else the committed golden, else C++-only (parity NOT checked,
-                  # clearly reported in the log).
+                  # clearly reported in the log). Once golden/heartbeat.ada.json
+                  # is committed, set UXAS_REQUIRE_PARITY=1 here to forbid the
+                  # C++-only fallback.
                   make test CXX_COMPILER="$UXAS_CXX"
 
             - name: Differential harness self-test

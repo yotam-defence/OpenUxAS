@@ -3,6 +3,7 @@
 # Usage: smoke.sh <uxas-cpp-binary>
 # Reference selection: real Ada (UXAS_ADA_BIN or uxas_ada on PATH) > golden file
 # > C++-only smoke (NO parity check; says so loudly).
+# Set UXAS_REQUIRE_PARITY=1 to fail (exit 4) instead of falling back to C++-only.
 set -u
 CPP_BIN=${1:?usage: smoke.sh <uxas-binary>}
 HERE=$(cd "$(dirname "$0")" && pwd)
@@ -21,6 +22,9 @@ if [ -n "$ADA_BIN" ]; then
 elif [ -f "$GOLDEN" ]; then
     echo "[differential] Ada binary unavailable; comparing against golden $GOLDEN"
     exec $RUN --golden "$GOLDEN"
+elif [ "${UXAS_REQUIRE_PARITY:-0}" = 1 ]; then
+    echo "[differential] UXAS_REQUIRE_PARITY=1 but no Ada binary and no golden $GOLDEN" >&2
+    exit 4
 else
     echo "[differential] Ada reference unavailable (no UXAS_ADA_BIN/uxas_ada, no golden $GOLDEN): parity NOT checked; running C++-only smoke"
     exec $RUN --cpp-only
