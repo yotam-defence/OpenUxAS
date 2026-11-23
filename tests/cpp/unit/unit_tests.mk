@@ -34,6 +34,19 @@ GTEST_SYSTEM_OK=$(shell echo 'int main(){return 0;}' | $(CXX) -x c++ - -lgtest -
 test: $(UNIT_TEST_BIN)
 	@echo "[Run unit tests]"
 	@$(UNIT_TEST_BIN) $(UNIT_TEST_ARGS)
+	@$(MAKE) --no-print-directory test-diff
+
+# Smoke differential run (Ada reference vs C++). Skipped when neither a golden
+# file nor a uxas_ada binary is available, or when the uxas binary is missing.
+test-diff:
+	@if [ ! -x "$(OBJECT_DIR)/uxas" ]; then \
+	    echo "[Skip smoke differential run: $(OBJECT_DIR)/uxas not built]"; \
+	elif [ -z "$$(ls tests/cpp/pylmcp/diff/golden 2>/dev/null)" ] && ! command -v uxas_ada >/dev/null 2>&1; then \
+	    echo "[Skip smoke differential run: no golden file and no uxas_ada]"; \
+	else \
+	    echo "[Run smoke differential test]"; \
+	    PATH="$(abspath $(OBJECT_DIR)):$$PATH" python3 tests/cpp/run-diff run smoke_heartbeat; \
+	fi
 
 unit_tests: $(UNIT_TEST_BIN)
 
@@ -69,4 +82,4 @@ clean_unit_tests:
 
 -include $(wildcard $(UNIT_TEST_DIR)/*.d)
 
-.PHONY: test unit_tests clean_unit_tests
+.PHONY: test test-diff unit_tests clean_unit_tests
