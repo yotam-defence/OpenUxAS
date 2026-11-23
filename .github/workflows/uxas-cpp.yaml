@@ -8,6 +8,8 @@ on:
             - 'anod'
             - 'src/cpp/**'
             - 'tests/cpp/**'
+            - 'Makefile'
+            - '.github/workflows/uxas-cpp.yaml'
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
@@ -17,6 +19,8 @@ on:
             - 'anod'
             - 'src/cpp/**'
             - 'tests/cpp/**'
+            - 'Makefile'
+            - '.github/workflows/uxas-cpp.yaml'
     workflow_dispatch:
     schedule:
         - cron: '20 3 * * 4'
@@ -64,3 +68,82 @@ jobs:
               run: |
                   cd OpenUxAS/tests/cpp
                   ./run-tests --qualifier=${{ matrix.qualifier}}
+
+    # C++17 build matrix (gcc 11+/clang 14+), GoogleTest unit tests and the
+    # differential harness unit tests / smoke run.
+    cxx17:
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-22.04, ubuntu-24.04]
+                compiler: [gcc, clang]
+        runs-on: ${{ matrix.os }}
+        env:
+            # Makefile variable overrides for the compiler under test. The
+            # anod environment prefix (library/include paths) is prepended in
+            # the "Select compiler" step.
+            OBJECT_DIR: obj/cpp-${{ matrix.compiler }}
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  path: OpenUxAS
+
+            - name: Set up python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.os == 'ubuntu-22.04' && '3.10' || '3.12' }}
+
+            - name: Set up java
+              uses: actions/setup-java@v4
+              with:
+                  java-version: '11'
+                  distribution: 'adopt'
+
+            - name: Install compilers and GoogleTest
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtest-dev clang
+                  gcc --version
+                  clang --version
+
+            - name: Install infrastructure
+              run: |
+                  cd OpenUxAS
+                  infrastructure/install -vv --no-gnat --no-java -y
+
+            - name: Build third-party dependencies (anod)
+              run: |
+                  cd OpenUxAS
+                  ./anod -v build uxas --qualifier=scenario=release
+
+            - name: Select compiler
+              run: |
+                  cd OpenUxAS
+                  ANODENV="$(NO_INSTALL_VENV=1 ./anod printenv uxas --build-env --inline)"
+                  if [ "${{ matrix.compiler }}" = "clang" ]; then
+                      echo "CXX_OVERRIDE=${ANODENV}clang++" >> "$GITHUB_ENV"
+                  else
+                      echo "CXX_OVERRIDE=${ANODENV}g++" >> "$GITHUB_ENV"
+                  fi
+
+            - name: Build uxas (C++17, ${{ matrix.compiler }})
+              run: |
+                  cd OpenUxAS
+                  make all CXX="$CXX_OVERRIDE" OBJECT_DIR="$OBJECT_DIR" ENABLE_WARNINGS=true
+                  "$OBJECT_DIR/uxas" -version
+
+            - name: Unit tests (GoogleTest)
+              run: |
+                  cd OpenUxAS
+                  make test CXX="$CXX_OVERRIDE" OBJECT_DIR="$OBJECT_DIR"
+
+            - name: Differential harness unit tests
+              run: |
+                  cd OpenUxAS/tests/cpp
+                  python3 -m pip install pytest pyzmq e3-core
+                  python3 -m pytest difftest/tests -q
+
+            - name: Differential smoke (golden Ada output)
+              run: |
+                  cd OpenUxAS
+                  make diff-smoke OBJECT_DIR="$OBJECT_DIR"
