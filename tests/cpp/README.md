@@ -291,3 +291,16 @@ from the repository root (binary: `obj/cpp/unit_tests`). GoogleTest is taken
 from the system package `libgtest-dev` rather than built with an anod spec or
 vendored; see `tests/cpp/unit/README.md` for the rationale and the test
 conventions (no `main()`, one `test_<topic>.cpp` per unit).
+
+# Differential smoke test
+
+`make test` first runs the GoogleTest binary and then `make test-differential`,
+which replays the heartbeat scenario (`tests/cpp/differential/scenarios/heartbeat.json`)
+through `obj/cpp/uxas` and compares it with the Ada reference `uxas_ada`
+(`$UXAS_ADA_BIN` or `PATH`), else with the golden file
+`tests/cpp/differential/golden/heartbeat.ada.json`. If neither exists (no
+GNAT/Alire) it falls back to `--cpp-only`: the C++ side is run twice and
+checked for clean exit, a non-error heartbeat capture and determinism, and
+the output states `Ada reference unavailable: parity not checked`. That
+fallback is a smoke test, not a parity result. Requires `pyzmq`. See
+`tests/cpp/differential/README.md`.

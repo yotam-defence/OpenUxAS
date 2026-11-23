@@ -40,3 +40,15 @@ def test_missing_golden_exit_4():
     sc = os.path.join(ROOT, "scenarios", "heartbeat.json")
     r = run_cli(sc, "--golden", "/nonexistent/g.json")
     assert r.returncode == 4
+
+
+def test_cpp_only_missing_binary_exit_3_and_golden_conflict():
+    sc = os.path.join(ROOT, "scenarios", "heartbeat.json")
+    with tempfile.TemporaryDirectory() as d:
+        r = run_cli(sc, "--cpp-only", "--cpp-bin", "/nonexistent/uxas",
+                    "--workdir", d)
+    assert r.returncode == 3, (r.stdout, r.stderr)
+    assert "parity not checked" in r.stdout
+    assert "passed" not in r.stdout
+    r = run_cli(sc, "--cpp-only", "--golden", "/x.json")
+    assert r.returncode == 2

@@ -74,16 +74,23 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
-            - name: Run C++ unit tests (make test)
+            - name: Install pyzmq for the differential harness
+              run: python3 -m pip install pyzmq pytest
+
+            - name: Run C++ unit tests and differential smoke run (make test)
               run: |
                   cd OpenUxAS
-                  # The Makefile picks up the anod build environment itself
+                  # The Makefile picks up the anod build environment itself.
+                  # `make test` = GoogleTest suite + `make test-differential`:
+                  # compares against uxas_ada ($UXAS_ADA_BIN or PATH) if present,
+                  # else the committed golden, else C++-only (parity NOT checked,
+                  # clearly reported in the log).
                   make test CXX_COMPILER="$UXAS_CXX"
 
-            - name: Differential harness smoke test
+            - name: Differential harness self-test
               run: |
                   cd OpenUxAS
-                  python3 tests/cpp/differential/run_differential.py --self-test
+                  python3 -I tests/cpp/differential/run_differential.py --self-test
 
             - name: Test OpenUxAS C++
               run: |

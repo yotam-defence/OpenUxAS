@@ -133,3 +133,46 @@ def test_exclude_echo_option():
     sc = make_scenario(2, capture={"exclude_echo": True})
     res = runner.finish(sc, runner.run_side(sc, FakeBackend("cpp")))
     assert res.records == []
+
+
+def test_cpp_only_passes_and_never_claims_parity():
+    sc = make_scenario(3)
+    out = runner.run_cpp_only(sc, factory())
+    assert out.exit_code == runner.EXIT_MATCH
+    assert out.parity_checked is False
+    assert out.as_dict()["parity_checked"] is False
+    assert len(out.sides) == 2
+
+
+def test_cpp_only_detects_nondeterminism():
+    sc = make_scenario(2)
+    n = []
+
+    def f(side):
+        n.append(1)
+        beh = (lambda env, t: [kvp_raw("heartbeat", "odd")]) if len(n) == 2 else None
+        return FakeBackend(side, behaviour=beh)
+    out = runner.run_cpp_only(sc, f)
+    assert out.exit_code == runner.EXIT_DIFF
+    assert any("deterministic" in m for m in out.messages)
+
+
+def test_cpp_only_fails_on_empty_capture():
+    sc = make_scenario(2)
+    out = runner.run_cpp_only(sc, lambda side: FakeBackend(side, echo=False))
+    assert out.exit_code == runner.EXIT_DIFF
+    assert any("no messages" in m for m in out.messages)
+
+
+def test_cpp_only_fails_on_malformed_capture():
+    sc = make_scenario(2)
+    out = runner.run_cpp_only(sc, lambda side: FakeBackend(
+        side, behaviour=lambda env, t: [b"garbage"]))
+    assert out.exit_code == runner.EXIT_DIFF
+    assert any("malformed" in m for m in out.messages)
+
+
+def test_cpp_only_crash_is_run_failure():
+    sc = make_scenario(3)
+    out = runner.run_cpp_only(sc, lambda s: FakeBackend(s, crash_at_ms=7))
+    assert out.exit_code == runner.EXIT_RUN_FAILURE

@@ -145,8 +145,9 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
-	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit), then test-differential"
 	@echo "   clean: Clean all build artefacts"
+	@echo "   test-differential: Heartbeat differential smoke run (Ada/golden if available, else C++-only)"
 	@echo "   help:  This target"
 	@echo
 	@echo "User variables:"
@@ -186,8 +187,16 @@ $(OBJECT_DIR)/unit_tests: $(UNIT_TEST_OBJECTS)
 test: $(OBJECT_DIR)/unit_tests
 	@echo "[Run unit tests]"
 	@$(OBJECT_DIR)/unit_tests
+	@$(MAKE) --no-print-directory test-differential
 
-.PHONY: help clean all test
+# Smoke differential run (heartbeat scenario) of obj/cpp/uxas against the Ada
+# reference (UXAS_ADA_BIN / uxas_ada), else the golden file, else C++-only
+# (parity NOT checked). Needs pyzmq. See tests/cpp/differential/README.md.
+test-differential: $(OBJECT_DIR)/uxas
+	@echo "[Run differential smoke test]"
+	@$(ANODENV) tests/cpp/differential/smoke.sh $(abspath $(OBJECT_DIR)/uxas)
+
+.PHONY: help clean all test test-differential
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))

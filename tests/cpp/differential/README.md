@@ -13,6 +13,8 @@ types that have no built-in decoder.
 python3 run_differential.py scenarios/heartbeat.json \
     --cpp-bin /path/to/uxas --ada-bin /path/to/uxas_ada
 python3 run_differential.py scenarios/heartbeat.json --golden golden/heartbeat.ada.json
+python3 run_differential.py scenarios/heartbeat.json --cpp-bin /path/to/uxas --cpp-only
+make test-differential                            # from the repo root, see below
 python3 -I run_differential.py --self-test        # unit tests, no binaries/zmq
 python3 -I -m pytest tests                        # same tests via pytest
 ```
@@ -27,6 +29,7 @@ python3 -I -m pytest tests                        # same tests via pytest
 | `--record-only` | with `--record-golden`: stop after recording |
 | `--golden FILE` | use a cached reference instead of running Ada (for machines without the Alire/GNAT toolchain) |
 | `--ignore-golden-digest` | accept a golden recorded from an older version of the scenario |
+| `--cpp-only` | Ada-less smoke mode, see below. Cannot be combined with `--golden`/`--record-golden` |
 | `--plugin X` | load a comparator plug-in (`file.py` or module name), repeatable |
 | `--workdir DIR` | keep generated configs and process logs there (kept automatically on failure) |
 | `--report FILE` | machine readable JSON result |
@@ -35,6 +38,27 @@ python3 -I -m pytest tests                        # same tests via pytest
 Exit codes: `0` match, `1` differences, `2` usage/scenario error, `3` a
 binary was missing, crashed, exited uncleanly or the timeout hit, `4` golden
 file missing/corrupt/stale/for another scenario.
+
+## `make test-differential` and `--cpp-only`
+
+`make test` runs the GoogleTest suite and then `make test-differential`, which
+runs `scenarios/heartbeat.json` through `smoke.sh` against `obj/cpp/uxas`.
+The reference is chosen in this order:
+
+1. real Ada: `$UXAS_ADA_BIN`, else `uxas_ada` on `PATH` -> full comparison;
+2. golden file `golden/heartbeat.ada.json` (override with `$UXAS_GOLDEN`) ->
+   comparison against the recorded Ada output (stale/corrupt golden = exit 4);
+3. neither -> `--cpp-only`.
+
+`--cpp-only` runs only the C++ side, twice, and checks: both runs are clean
+(no crash/unclean exit), the comparator-selected capture is non-empty with no
+malformed records (for heartbeat: KeyValuePairs were published back by the
+bridge), and the two runs produce identical canonical output (determinism).
+It always prints `Ada reference unavailable: parity not checked` and the
+report has `parity_checked: false`; it is never a parity pass. Real runs need
+`pyzmq` (exit 3 otherwise). Replayed messages default to
+`source_entity_id` = the scenario entity id, because the PublishPull bridge
+only exports messages whose source entity is its own.
 
 ## How a run works
 
@@ -164,8 +188,9 @@ and `DiffReport` are reusable for custom `compare`.
 scenario name and a digest of everything influencing output (entity, services,
 replay, capture, normalise). `--golden` refuses files for another scenario or
 a changed scenario (exit 4) unless `--ignore-golden-digest`. Record goldens on
-a machine with the Ada toolchain and commit them; CI without Alire/GNAT uses
-`--golden`.
+a machine with the Ada toolchain and commit them (for the smoke test:
+`--record-golden golden/heartbeat.ada.json --record-only`); CI without
+Alire/GNAT uses `--golden`. No golden is committed yet (needs the Ada binary).
 
 ## Extending for milestones 2-7
 

@@ -84,3 +84,11 @@ def test_xml_default_subscribes_to_everything_and_declaration():
     xml = config.make_config(sc, "cpp", "p", "q", "/w")
     assert xml.startswith(b'<?xml version="1.0"') and xml.count(b"<?xml") == 1
     assert len(ET.fromstring(xml).find("Bridge")) == 52
+
+
+def test_replay_source_entity_defaults_to_scenario_entity():
+    sc = make_scenario(1, entity={"id": 7})
+    assert sc.replay[0].envelope.source_entity_id == 7
+    d = make_scenario(1, entity={"id": 7})
+    d.data["replay"][0]["source_entity_id"] = 3
+    assert scn.scenario_from_dict(d.data).replay[0].envelope.source_entity_id == 3

@@ -42,6 +42,10 @@ def build_parser():
     p.add_argument("--ignore-golden-digest", action="store_true",
                    help="accept golden files recorded from an older "
                         "version of the scenario")
+    p.add_argument("--cpp-only", action="store_true",
+                   help="Ada-less smoke mode: run only the C++ side twice, "
+                        "check clean runs, non-error heartbeat capture and "
+                        "determinism. Does NOT check Ada parity.")
     p.add_argument("--plugin", action="append", default=[],
                    help="comparator plug-in (file.py or module); repeatable")
     p.add_argument("--workdir", help="keep configs/logs in this directory "
@@ -123,16 +127,27 @@ def main(argv=None):
     workdir, temp = runner.make_workdir(args.workdir)
     factory = runner.real_backend_factory(sc, workdir, args.cpp_bin,
                                           args.ada_bin)
-    result = runner.run_differential(
-        sc, factory, golden=args.golden, record_golden=args.record_golden,
-        golden_side=args.golden_side,
-        ignore_golden_digest=args.ignore_golden_digest,
-        record_only=args.record_only)
+    if args.cpp_only:
+        if args.golden or args.record_golden:
+            print("error: --cpp-only cannot be combined with --golden/"
+                  "--record-golden", file=sys.stderr)
+            return runner.EXIT_USAGE
+        result = runner.run_cpp_only(sc, factory)
+    else:
+        result = runner.run_differential(
+            sc, factory, golden=args.golden, record_golden=args.record_golden,
+            golden_side=args.golden_side,
+            ignore_golden_digest=args.ignore_golden_digest,
+            record_only=args.record_only)
 
     for m in result.messages:
         print(m, file=sys.stderr)
     if result.report is not None:
         print(result.report.format())
+    if args.cpp_only:
+        print("Ada reference unavailable: parity not checked "
+              "(C++-only smoke %s)" %
+              ("passed" if result.exit_code == runner.EXIT_MATCH else "FAILED"))
     if args.report:
         with open(args.report, "w", encoding="utf-8") as fd:
             json.dump(result.as_dict(), fd, indent=2, sort_keys=True)

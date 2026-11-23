@@ -129,10 +129,12 @@ class DifferentialResult(object):
         self.report = None
         self.sides = {}
         self.messages = []
+        self.parity_checked = True
 
     def as_dict(self):
         return {
             "exit_code": self.exit_code,
+            "parity_checked": self.parity_checked,
             "messages": self.messages,
             "report": self.report.as_dict() if self.report else None,
             "sides": {k: {"records": len(v.records),
@@ -192,6 +194,53 @@ def run_differential(scenario, backend_factory, golden=None,
         out.exit_code = EXIT_RUN_FAILURE
         return out
     out.report = comp.compare(ref.records, cand.records)
+    out.exit_code = EXIT_MATCH if out.report.equal else EXIT_DIFF
+    return out
+
+
+def run_cpp_only(scenario, backend_factory, runs=2):
+    """Ada-less smoke check of the C++ side.
+
+    Runs the candidate ``runs`` times and checks: every run is clean (no
+    crash/unclean exit), the comparator-selected capture is non-empty with no
+    malformed records, and the runs agree with each other (determinism).
+    This is NOT a parity check; ``parity_checked`` is always False.
+    """
+    out = DifferentialResult()
+    out.parity_checked = False
+    comp = comparators.get_comparator(scenario.comparator,
+                                      scenario.comparator_options)
+    results = []
+    for i in range(max(2, runs)):
+        res = finish(scenario, run_side(scenario, backend_factory("cpp")))
+        out.sides["cpp" if i == 0 else "cpp#%d" % (i + 1)] = res
+        if res.error:
+            out.messages.append("cpp run %d: %s: %s" %
+                                (i + 1, res.error.kind, res.error))
+            out.exit_code = EXIT_RUN_FAILURE
+            return out
+        results.append(res)
+    problems = []
+    for i, res in enumerate(results):
+        bad = [r for r in res.records if "malformed" in r]
+        if bad:
+            problems.append("run %d: %d malformed record(s): %s" %
+                            (i + 1, len(bad), bad[0]["malformed"]))
+        sel = [r for r in res.records if comp.select(r)]
+        if not sel:
+            problems.append("run %d: no messages selected by comparator %r "
+                            "were captured" % (i + 1, scenario.comparator))
+    if problems:
+        out.messages.extend(problems)
+        out.exit_code = EXIT_DIFF
+        return out
+    out.report = comp.compare(results[0].records, results[1].records)
+    for r in results[2:]:
+        rep = comp.compare(results[0].records, r.records)
+        if not rep.equal:
+            out.report = rep
+    if not out.report.equal:
+        out.messages.append("C++ output is not deterministic across runs")
     out.exit_code = EXIT_MATCH if out.report.equal else EXIT_DIFF
     return out
 

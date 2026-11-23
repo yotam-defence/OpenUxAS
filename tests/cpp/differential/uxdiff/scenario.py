@@ -67,7 +67,7 @@ class Scenario(object):
         self.binaries = copy.deepcopy(data.get("binaries", {}))
         self.root_attrs = dict(data.get("root_attrs", {}))
         self.services = self._services(data.get("services", []))
-        self.replay = self._replay(data.get("replay", []))
+        self.replay = self._replay(data.get("replay", []), self.entity_id)
 
     @staticmethod
     def _services(svc):
@@ -85,7 +85,9 @@ class Scenario(object):
         return out
 
     @staticmethod
-    def _replay(entries):
+    def _replay(entries, entity_id=100):
+        # The PublishPull bridge only exports messages whose source entity id
+        # equals its own, so replayed messages default to the scenario entity.
         steps = []
         for i, e in enumerate(entries):
             where = "replay[%d]" % i
@@ -106,7 +108,7 @@ class Scenario(object):
                 content_type=e.get("content_type", "lmcp"),
                 descriptor=e.get("descriptor", address),
                 source_group=e.get("source_group", ""),
-                source_entity_id=e.get("source_entity_id", 0),
+                source_entity_id=e.get("source_entity_id", entity_id),
                 source_service_id=e.get("source_service_id", 0))
             steps.append(ReplayStep(i, delay, env, e.get("label", header.series)))
         return steps
