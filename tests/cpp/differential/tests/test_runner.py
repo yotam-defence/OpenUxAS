@@ -2,7 +2,7 @@ from helpers import *  # noqa
 import json
 import os
 import tempfile
-from uxdiff import runner, lmcp, comparators
+from uxdiff import runner
 from uxdiff.backends import FakeBackend, RunError
 
 

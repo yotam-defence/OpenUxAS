@@ -1,5 +1,5 @@
 from helpers import *  # noqa
-from uxdiff import lmcp, normalise
+from uxdiff import lmcp
 from uxdiff.normalise import Captured, Normaliser, register_decoder
 
 

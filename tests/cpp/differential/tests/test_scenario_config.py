@@ -1,5 +1,4 @@
 from helpers import *  # noqa
-import json
 import os
 import tempfile
 from xml.etree import ElementTree as ET

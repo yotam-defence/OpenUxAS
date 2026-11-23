@@ -1,5 +1,4 @@
 from helpers import *  # noqa
-import base64
 from uxdiff import lmcp
 
 
