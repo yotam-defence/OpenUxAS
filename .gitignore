@@ -80,13 +80,9 @@ tests/cpp/results
 tests/proof/out
 
 # python virtual environments / caches, test artefacts
-obj/
-tests/cpp/results/
 .venv/
 venv/
-__pycache__/
 .pytest_cache/
-*.pyc
 *.pyo
 Testing/
 
