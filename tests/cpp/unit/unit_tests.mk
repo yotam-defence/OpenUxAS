@@ -39,15 +39,11 @@ test: $(UNIT_TEST_BIN)
 # Smoke differential run. With uxas_ada on PATH (or an Ada golden file) the
 # reference is Ada; otherwise the committed C++-recorded golden
 # (tests/cpp/pylmcp/diff/golden/smoke_heartbeat.cpp.json) is used as a
-# regression gate. Only skipped when the uxas binary is not built.
+# regression gate. The uxas binary is built first if needed, so the gate never skips.
 # Requires python3 with pyzmq.
-test-diff:
-	@if [ ! -x "$(OBJECT_DIR)/uxas" ]; then \
-	    echo "[Skip smoke differential run: $(OBJECT_DIR)/uxas not built]"; \
-	else \
-	    echo "[Run smoke differential test]"; \
-	    PATH="$(abspath $(OBJECT_DIR)):$$PATH" python3 tests/cpp/run-diff run smoke_heartbeat; \
-	fi
+test-diff: $(OBJECT_DIR)/uxas
+	@echo "[Run smoke differential test]"
+	@PATH="$(abspath $(OBJECT_DIR)):$$PATH" python3 tests/cpp/run-diff run smoke_heartbeat
 
 unit_tests: $(UNIT_TEST_BIN)
 
@@ -56,16 +52,18 @@ $(UNIT_TEST_DIR)/%.o: $(UNIT_TEST_SRC_DIR)/%.cpp
 	@echo "[Compiling $<]"
 	@$(CXX) -c $< $(UNIT_TEST_CXX_FLAGS) -MMD -MP -o $@
 
-$(UNIT_TEST_DIR)/gtest-all.o:
+define COMPILE_GTEST_OBJECT
 	@test -n "$(GTEST_SRC_DIR)" || { echo "GoogleTest not found: install libgtest-dev or set GTEST_SRC_DIR" >&2; exit 1; }
 	@mkdir -p $(dir $@)
-	@echo "[Compiling GoogleTest from $(GTEST_SRC_DIR)]"
-	@$(CXX) -c $(GTEST_SRC_DIR)/src/gtest-all.cc -I$(GTEST_SRC_DIR) -I$(GTEST_SRC_DIR)/include $(CXX_FLAGS) -o $@
+	@echo "[Compiling GoogleTest $(notdir $@) from $(GTEST_SRC_DIR)]"
+	@$(CXX) -c $(GTEST_SRC_DIR)/src/$(1) -I$(GTEST_SRC_DIR) -I$(GTEST_SRC_DIR)/include $(CXX_FLAGS) -o $@
+endef
+
+$(UNIT_TEST_DIR)/gtest-all.o:
+	$(call COMPILE_GTEST_OBJECT,gtest-all.cc)
 
 $(UNIT_TEST_DIR)/gtest_main.o:
-	@test -n "$(GTEST_SRC_DIR)" || { echo "GoogleTest not found: install libgtest-dev or set GTEST_SRC_DIR" >&2; exit 1; }
-	@mkdir -p $(dir $@)
-	@$(CXX) -c $(GTEST_SRC_DIR)/src/gtest_main.cc -I$(GTEST_SRC_DIR) -I$(GTEST_SRC_DIR)/include $(CXX_FLAGS) -o $@
+	$(call COMPILE_GTEST_OBJECT,gtest_main.cc)
 
 # Test runner link: system libgtest when available, from-source otherwise.
 $(UNIT_TEST_BIN): $(UNIT_TEST_OBJECTS)
