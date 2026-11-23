@@ -124,6 +124,27 @@ class TypesOnlyComparator(Comparator):
                 for t in sorted(set(rc) | set(gc)) if rc[t] != gc[t]]
 
 
+@register("distinct")
+class DistinctComparator(Comparator):
+    """Set equality of canonical messages, ignoring multiplicity.
+
+    For timer driven publishers (e.g. HelloWorld) the *number* of messages
+    depends on wall-clock timing, but the distinct content must match and at
+    least one message must be present on both sides.
+    """
+
+    def compare(self, window, ref, got):
+        rk = {m.key for m in map(self.prepare, ref)}
+        gk = {m.key for m in map(self.prepare, got)}
+        diffs = [Difference(window, "missing", k.split(" ", 1)[0],
+                            "present in reference only", ref=k)
+                 for k in sorted(rk - gk)]
+        diffs += [Difference(window, "unexpected", k.split(" ", 1)[0],
+                             "present in candidate only", got=k)
+                  for k in sorted(gk - rk)]
+        return diffs
+
+
 @register("tolerance")
 class ToleranceComparator(Comparator):
     """Like exact but numbers may differ by ``abs``/``rel`` tolerance.

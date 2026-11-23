@@ -35,6 +35,7 @@ class Capture:
     fingerprint: str = ""
     source: str = "live"      # live | golden
     log_tail: str = ""
+    meta: Dict[str, Any] = field(default_factory=dict)
 
     def decode(self, decoder=decode_frame) -> List[DecodedMessage]:
         return [decoder(f.data, window=f.window, t_ms=f.t_ms, side=self.side)
@@ -42,6 +43,7 @@ class Capture:
 
     def to_dict(self) -> Dict[str, Any]:
         return {"golden_version": GOLDEN_VERSION, "side": self.side,
+                "meta": self.meta,
                 "scenario": self.scenario, "fingerprint": self.fingerprint,
                 "frames": [{"window": f.window, "t_ms": round(f.t_ms, 1),
                             "frame_hex": f.data.hex()}
@@ -55,6 +57,7 @@ class Capture:
                                   % d["golden_version"])
             return cls(side=d["side"], scenario=d["scenario"],
                        fingerprint=d["fingerprint"], source="golden",
+                       meta=dict(d.get("meta", {})),
                        frames=[RawFrame(f["window"], f.get("t_ms", 0.0),
                                         bytes.fromhex(f["frame_hex"]))
                                for f in d["frames"]])

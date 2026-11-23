@@ -26,6 +26,7 @@ tests/cpp/run-diff run smoke_heartbeat              # scenario name, or a path
 tests/cpp/run-diff run --all                        # every scenarios/*.json
 tests/cpp/run-diff run smoke_heartbeat --uxas build/uxas --uxas-ada build/uxas_ada
 tests/cpp/run-diff run smoke_heartbeat --update-golden     # record golden files (needs both binaries)
+tests/cpp/run-diff run smoke_heartbeat --record-cpp-golden # C++-only regression golden (no Ada needed)
 tests/cpp/run-diff run smoke_heartbeat --ada golden        # CI without Alire/GNAT
 tests/cpp/run-diff gen-config smoke_heartbeat ada          # print generated XML
 tests/cpp/run-diff record out.jsonl --sub-url tcp://127.0.0.1:5560 --duration 20
@@ -84,7 +85,7 @@ Applied to decoded LMCP messages (`canonical.py`):
 Messages of each window are routed by the first matching `comparators` rule
 (glob on full or short type name) to a comparator; unmatched types use
 `exact` (multiset equality of canonical messages).  Built-ins: `exact`,
-`ignore`, `types_only` (counts per type), `tolerance` (`abs`/`rel` numeric
+`ignore`, `types_only` (counts per type), `distinct` (set equality, ignores multiplicity), `tolerance` (`abs`/`rel` numeric
 tolerance).  All accept `ignore_fields`.  Custom plug-ins subclass
 `pylmcp.diff.comparators.Comparator`, implement
 `compare(window, ref, got) -> [Difference]` and are referenced as
@@ -141,10 +142,34 @@ required.
   a C++ service that has no Ada counterpart).
 
 The shipped smoke scenario `scenarios/smoke_heartbeat.json` replays three
-`KeyValuePair` heartbeats (no `AutomationRequest`) against an
-`AutomationRequestValidatorService` configuration; both outputs must match.
-It sets `min_messages: 0`, i.e. it currently proves the harness plumbing and
-"no unexpected output", not behavioural parity.
+`KeyValuePair` heartbeats (no `AutomationRequest`).  Both sides run
+`AutomationRequestValidatorService`; the C++ side additionally runs
+`HelloWorld` (`sides: ["cpp"]`, there is no Ada counterpart), a timer-driven
+publisher of `KeyValuePair`, so the C++ `uxas` emits real outbound LMCP
+traffic.  The scenario requires `min_messages: 1` and compares
+`KeyValuePair` with the `distinct` comparator (set equality, since the number
+of timer ticks is wall-clock dependent), so two silent runs can no longer
+"match".
+
+### Golden file provenance (important)
+
+`golden/smoke_heartbeat.cpp.json` was **recorded from the C++ `uxas` binary,
+not from Ada**, because `uxas_ada` (GNAT/Alire) was not available where it
+was recorded.  Its `meta` block says so (`recorded_from: cpp`,
+`reference_is_ada: false`).  It is a *regression baseline*.  No Ada golden is
+committed and none has been fabricated.  When no Ada reference is available
+(no `uxas_ada`, no `*.ada.json`), `run-diff` (and therefore `make test` /
+`make test-diff`) compares the live C++ run against this golden and prints
+`REGRESSION GATE` in the report.  With `uxas_ada` present the comparison is
+Ada vs C++ as before (note: the Ada tree has no HelloWorld, so the scenario
+needs an Ada-side counterpart service before that comparison can match).
+
+```
+# re-record the C++ regression baseline (only needs uxas)
+tests/cpp/run-diff run smoke_heartbeat --uxas obj/cpp/uxas --record-cpp-golden
+# record the real Ada reference (and C++) goldens (needs uxas and uxas_ada)
+tests/cpp/run-diff run smoke_heartbeat --uxas obj/cpp/uxas --uxas-ada <path>/uxas_ada --update-golden
+```
 
 ## Tests
 
@@ -158,7 +183,7 @@ also meant for service milestones' own comparator tests.
 
 ## Known limits
 
-* Never run against real binaries in this repository's sandbox (none built);
-  live paths (`bus.py`, `process.py`) are exercised only by the fakes.
+* The live C++ path has been run against a real `uxas` build; the Ada path
+  (`HubBus` relay) has never been run against a real `uxas_ada`.
 * Both sides use the same ports sequentially; run one harness at a time.
 * Service-id based filtering of output is not offered; use `exclude_types`.

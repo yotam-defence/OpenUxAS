@@ -13,7 +13,7 @@ from typing import List, Optional
 from .capture import Capture, GoldenError
 from .config import build_config
 from .differ import dump_canonical
-from .runner import RunContext, RunError, run_scenario
+from .runner import RunContext, RunError, record_cpp_golden, run_scenario
 from .process import ProcessError
 from .scenario import ScenarioError, load_scenario
 
@@ -71,6 +71,9 @@ def build_parser() -> argparse.ArgumentParser:
                    default="live")
     r.add_argument("--update-golden", action="store_true",
                    help="run live and (re)write golden captures")
+    r.add_argument("--record-cpp-golden", action="store_true",
+                   help="record ONLY the C++ side as a labelled regression "
+                   "golden (use when uxas_ada is unavailable)")
     r.add_argument("--allow-stale-golden", action="store_true")
     r.add_argument("--workdir", help="keep run files (configs, logs) here")
     r.add_argument("--report", help="write a JSON report to this file")
@@ -110,6 +113,11 @@ def cmd_run(a) -> int:
     worst, reports = EXIT_OK, []
     for sc in scenarios:
         try:
+            if a.record_cpp_golden:
+                cap = record_cpp_golden(sc, ctx, a.golden_dir)
+                print("scenario %s: recorded %d C++ message(s) as "
+                      "regression golden" % (sc.name, len(cap.frames)))
+                continue
             res = run_scenario(sc, ctx, ada=a.ada, cpp=a.cpp,
                                golden_dir=a.golden_dir,
                                update_golden=a.update_golden,

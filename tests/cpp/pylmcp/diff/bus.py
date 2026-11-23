@@ -46,6 +46,8 @@ class ClientBus(Bus):
     def poll(self) -> List[bytes]:
         import zmq
         out = []
+        if self.sub is None:       # not opened yet (startup wait)
+            return out
         while True:
             try:
                 out.append(self.sub.recv(zmq.NOBLOCK))
@@ -93,8 +95,10 @@ class HubBus(Bus):
 
     def poll(self) -> List[bytes]:
         import zmq
-        self._drain_subscriptions()
         out = []
+        if self.pub is None:
+            return out
+        self._drain_subscriptions()
         while True:
             try:
                 f = self.pull.recv(zmq.NOBLOCK)

@@ -217,15 +217,67 @@ def compare_captures(sc: Scenario, ref: Capture, got: Capture,
     return result
 
 
+def record_cpp_golden(sc: Scenario, ctx: RunContext, golden_dir: str
+                      ) -> Capture:
+    """Record the C++ side only as a *regression* golden (not Ada output).
+
+    Used when ``uxas_ada`` is unavailable.  The golden is labelled with its
+    provenance so it can never be mistaken for the Ada reference.
+    """
+    cap = run_side("cpp", sc, ctx)
+    cap.meta = {
+        "recorded_from": "cpp",
+        "reference_is_ada": False,
+        "note": "Recorded from the C++ uxas binary because the Ada "
+                "reference (uxas_ada) was not available. This is a "
+                "regression baseline, NOT Ada output. Re-record the "
+                "reference with: tests/cpp/run-diff run %s --update-golden "
+                "(needs uxas and uxas_ada)." % sc.name,
+        "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "message_count": len(cap.frames),
+    }
+    if len(cap.frames) < sc.capture.min_messages:
+        raise RunError("recorded only %d message(s), scenario requires %d"
+                       % (len(cap.frames), sc.capture.min_messages))
+    ctx.log("[cpp] wrote %s" % save_golden(golden_dir, cap))
+    return cap
+
+
 def run_scenario(sc: Scenario, ctx: RunContext, ada: str = "auto",
                  cpp: str = "live", golden_dir: Optional[str] = None,
                  update_golden: bool = False,
                  allow_stale: bool = False) -> DiffResult:
     """Full differential run: reference (Ada) vs candidate (C++)."""
-    ref = obtain_capture("ada", sc, ctx, ada, golden_dir, update_golden,
-                         allow_stale)
+    cpp_regression = False
+    if update_golden:
+        # (re)record the reference from uxas_ada; the C++ capture below is
+        # recorded as well so both goldens are in sync.
+        ref = obtain_capture("ada", sc, ctx, ada, golden_dir, True,
+                             allow_stale)
+    else:
+        try:
+            ref = obtain_capture("ada", sc, ctx, ada, golden_dir, False,
+                                 allow_stale)
+        except (RunError, GoldenError) as e:
+            # No Ada reference (no golden, no binary): fall back to the
+            # committed C++ regression golden, if any.
+            if ada != "auto" or ctx.binaries.get("ada") or not golden_dir:
+                raise
+            try:
+                ref = load_golden(golden_dir, sc.name, "cpp",
+                                  sc.capture_fingerprint("cpp"),
+                                  allow_stale)
+            except GoldenError:
+                raise RunError("%s; and no C++ regression golden either" % e)
+            cpp_regression = True
     if ref.source == "live":
         ctx.sleep(0.2)          # let the sockets of side 1 be released
     got = obtain_capture("cpp", sc, ctx, cpp, golden_dir, update_golden,
                          allow_stale)
-    return compare_captures(sc, ref, got, ctx)
+    result = compare_captures(sc, ref, got, ctx)
+    if cpp_regression:
+        result.notes.insert(0, "REGRESSION GATE: no Ada reference "
+                            "available; compared live C++ against the "
+                            "committed C++-recorded golden (%s)" %
+                            ref.meta.get("recorded_at", "unknown date"))
+    return result

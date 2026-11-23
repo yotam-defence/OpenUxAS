@@ -103,3 +103,14 @@ def test_plugin_by_module_and_errors():
         load_comparator_class("nonexistent")
     with pytest.raises(ValueError):
         load_comparator_class("pylmcp.diff.comparators:Difference")
+
+
+def test_distinct_comparator_ignores_multiplicity():
+    from pylmcp.diff.comparators import DistinctComparator
+    from pylmcp.diff.canonical import CanonMessage
+    def m(v):
+        return CanonMessage("T", {"v": v}, 0, "T {\"v\":%d}" % v)
+    c = DistinctComparator()
+    assert c.compare(0, [m(1), m(1), m(1)], [m(1)]) == []
+    d = c.compare(0, [m(1)], [m(1), m(2)])
+    assert [x.kind for x in d] == ["unexpected"]

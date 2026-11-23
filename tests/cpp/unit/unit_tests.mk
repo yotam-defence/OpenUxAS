@@ -36,13 +36,14 @@ test: $(UNIT_TEST_BIN)
 	@$(UNIT_TEST_BIN) $(UNIT_TEST_ARGS)
 	@$(MAKE) --no-print-directory test-diff
 
-# Smoke differential run (Ada reference vs C++). Skipped when neither a golden
-# file nor a uxas_ada binary is available, or when the uxas binary is missing.
+# Smoke differential run. With uxas_ada on PATH (or an Ada golden file) the
+# reference is Ada; otherwise the committed C++-recorded golden
+# (tests/cpp/pylmcp/diff/golden/smoke_heartbeat.cpp.json) is used as a
+# regression gate. Only skipped when the uxas binary is not built.
+# Requires python3 with pyzmq.
 test-diff:
 	@if [ ! -x "$(OBJECT_DIR)/uxas" ]; then \
 	    echo "[Skip smoke differential run: $(OBJECT_DIR)/uxas not built]"; \
-	elif [ -z "$$(ls tests/cpp/pylmcp/diff/golden 2>/dev/null)" ] && ! command -v uxas_ada >/dev/null 2>&1; then \
-	    echo "[Skip smoke differential run: no golden file and no uxas_ada]"; \
 	else \
 	    echo "[Run smoke differential test]"; \
 	    PATH="$(abspath $(OBJECT_DIR)):$$PATH" python3 tests/cpp/run-diff run smoke_heartbeat; \

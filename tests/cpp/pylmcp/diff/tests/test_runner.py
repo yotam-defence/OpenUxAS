@@ -7,8 +7,8 @@ from helpers import kv_frame
 from pylmcp.diff import cli
 from pylmcp.diff.capture import (Capture, GoldenError, load_golden,
                                  save_golden)
-from pylmcp.diff.runner import (RunContext, RunError, run_scenario,
-                                run_side)
+from pylmcp.diff.runner import (RunContext, RunError, record_cpp_golden,
+                                run_scenario, run_side)
 from pylmcp.diff.scenario import load_scenario, parse_scenario
 from pylmcp.diff.testing import FakeBus, FakeClock, FakeLauncher
 
@@ -42,7 +42,7 @@ def reply(frame):
 
 def test_smoke_scenario_matches_with_fakes():
     sc = load_scenario(SMOKE)
-    ctx = make_ctx()
+    ctx = make_ctx({"ada": reply, "cpp": reply})
     res = run_scenario(sc, ctx, ada="live", cpp="live")
     assert res.ok, res.format()
     # configs were handed to both binaries
@@ -56,6 +56,7 @@ def test_smoke_scenario_matches_with_fakes():
 
 def test_replay_is_deterministic_windows_and_echo_filtered():
     sc = load_scenario(SMOKE)
+    sc.capture.window = "step"          # per-step windows for this check
     ctx = make_ctx({"cpp": reply, "ada": reply})
     cap = run_side("cpp", sc, ctx)
     # echo of the 3 injected frames dropped; 1 ack per step remains
@@ -92,7 +93,7 @@ def test_mismatch_detected():
     ctx = make_ctx({"ada": reply})       # only Ada reacts
     res = run_scenario(sc, ctx, ada="live", cpp="live")
     assert not res.ok
-    assert {d.kind for d in res.differences} == {"missing"}
+    assert {d.kind for d in res.differences} == {"missing", "count"}
 
 
 def test_ids_and_order_noise_do_not_cause_mismatch():
@@ -161,7 +162,8 @@ def test_golden_missing_and_stale(tmp_path):
     load_golden(gd, sc.name, "ada", sc.capture_fingerprint("ada"),
                 allow_stale=True)
     # auto falls back to a live run on stale golden
-    res = run_scenario(sc, make_ctx(), ada="auto", cpp="live", golden_dir=gd)
+    res = run_scenario(sc, make_ctx({"ada": reply, "cpp": reply}),
+                       ada="auto", cpp="live", golden_dir=gd)
     assert res.ok and not res.notes
     (tmp_path / "smoke_heartbeat.ada.json").write_text("{bad")
     with pytest.raises(GoldenError):
@@ -193,3 +195,61 @@ def test_cli_gen_config_show_and_errors(capsys, tmp_path, monkeypatch):
     path = save_golden(str(tmp_path), cap)
     assert cli.main(["show", path]) == cli.EXIT_OK
     assert "afrl.cmasi.KeyValuePair" in capsys.readouterr().out
+
+
+# ------------------------------------------------ non-vacuous smoke gate
+
+COMMITTED_GOLDEN = os.path.join(os.path.dirname(__file__), "..", "golden")
+
+
+def test_smoke_scenario_is_not_vacuous():
+    sc = load_scenario(SMOKE)
+    assert sc.capture.min_messages >= 1
+    assert any(r.use == "distinct" for r in sc.comparators)
+    # silence on both sides must now fail the gate
+    res = run_scenario(sc, make_ctx(), ada="live", cpp="live")
+    assert not res.ok and {d.kind for d in res.differences} == {"count"}
+
+
+def test_committed_cpp_golden_is_labelled_and_fresh():
+    sc = load_scenario(SMOKE)
+    cap = load_golden(COMMITTED_GOLDEN, sc.name, "cpp",
+                      sc.capture_fingerprint("cpp"))
+    assert cap.meta["recorded_from"] == "cpp"
+    assert cap.meta["reference_is_ada"] is False
+    assert "--update-golden" in cap.meta["note"]
+    assert len(cap.frames) >= sc.capture.min_messages
+    # never fabricate Ada output: there must be no committed Ada golden
+    assert not os.path.exists(os.path.join(COMMITTED_GOLDEN,
+                                           "smoke_heartbeat.ada.json"))
+
+
+def test_cpp_golden_regression_gate_when_ada_absent(tmp_path):
+    sc = load_scenario(SMOKE)
+    gd = str(tmp_path)
+    record_cpp_golden(sc, make_ctx({"cpp": reply}), gd)
+    assert os.listdir(gd) == ["smoke_heartbeat.cpp.json"]
+    assert load_golden(gd, sc.name, "cpp").meta["reference_is_ada"] is False
+    # Ada unavailable: live C++ is compared against the C++ golden
+    ctx = make_ctx({"cpp": reply})
+    ctx.binaries["ada"] = None
+    res = run_scenario(sc, ctx, ada="auto", cpp="live", golden_dir=gd)
+    assert res.ok and any("REGRESSION GATE" in n for n in res.notes)
+    assert len(ctx.launcher.started) == 1
+    # a C++ regression (different output) is detected
+    ctx = make_ctx({"cpp": lambda f: [kv_frame("other", "y")]})
+    ctx.binaries["ada"] = None
+    assert not run_scenario(sc, ctx, ada="auto", cpp="live",
+                            golden_dir=gd).ok
+    # no golden at all: infrastructure error, not a silent pass
+    ctx = make_ctx({"cpp": reply})
+    ctx.binaries["ada"] = None
+    with pytest.raises(RunError):
+        run_scenario(sc, ctx, ada="auto", cpp="live",
+                     golden_dir=str(tmp_path / "none"))
+
+
+def test_record_cpp_golden_requires_min_messages(tmp_path):
+    sc = load_scenario(SMOKE)
+    with pytest.raises(RunError):
+        record_cpp_golden(sc, make_ctx(), str(tmp_path))
