@@ -32,12 +32,14 @@ the anod venv). Everything else is plain standard library; PyYAML is optional
 * `--record-golden` stores the raw capture of each *live* run in
   `scenarios/golden/<scenario>.<ada|cpp>.json` (`--golden-dir` to change).
   Commit refreshed goldens together with the scenario change that required them.
-* `scenarios/golden/smoke_heartbeat.ada.json` is **hand-authored** (the
-  expectation is "no reaction to bridge-only heartbeats"); replace it with a
-  real recording (`--record-golden`) once `uxas-ada` is built.
-  Until then the smoke gate only verifies that the C++ binary starts, survives
-  the heartbeat sequence and emits no reactions; it does **not** prove Ada parity
-  (no Ada toolchain is available in the build sandbox).
+* **Known gap:** `scenarios/golden/smoke_heartbeat.ada.json` is
+  **hand-authored** (its provenance starts with `hand-authored`); the CLI logs a
+  WARNING whenever such a golden is used. It does **not** prove Ada parity: the
+  smoke gate only verifies the C++ binary starts and survives the heartbeat
+  sequence. Before Ada removal (Milestone 7), re-record it on a machine with the
+  Ada toolchain:
+  `python3 -m difftest run <scenario> --ada-bin <uxas_ada> --cpp-bin <uxas> --record-golden`
+  and commit the result.
 
 ## Scenario format (see `scenario.py` docstring)
 

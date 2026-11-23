@@ -271,3 +271,26 @@ def test_cli_missing_binary_is_error(tmp_path, monkeypatch):
                 "smoke_heartbeat", "ada", [])
     assert main(["run", SMOKE, "--ada-golden", "--cpp-bin",
                  str(tmp_path / "missing"), "--golden-dir", str(tmp_path)]) == 2
+
+
+def test_golden_provenance(tmp_path):
+    rec = str(tmp_path / "rec.json")
+    hand = str(tmp_path / "hand.json")
+    golden.save(rec, "s", "ada", [])
+    golden.save(hand, "s", "ada", [], provenance="hand-authored test")
+    assert golden.is_recorded(rec)
+    assert not golden.is_recorded(hand)
+    assert not golden.is_recorded(golden.golden_path(
+        DEFAULT_GOLDEN_DIR, "smoke_heartbeat", "ada"))
+
+
+def test_cli_warns_on_hand_authored_golden(tmp_path, capsys):
+    gdir = str(tmp_path)
+    golden.save(golden.golden_path(gdir, "smoke_heartbeat", "ada"),
+                "smoke_heartbeat", "ada", [], provenance="hand-authored x")
+    golden.save(golden.golden_path(gdir, "smoke_heartbeat", "cpp"),
+                "smoke_heartbeat", "cpp", [])
+    rc = main(["run", SMOKE, "--ada-golden", "--cpp-golden",
+               "--golden-dir", gdir])
+    assert rc == 0
+    assert "hand-authored" in capsys.readouterr().err

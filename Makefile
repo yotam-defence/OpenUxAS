@@ -202,7 +202,8 @@ test-clean:
 -include $(UNIT_TEST_OBJECTS:%=%.d)
 
 # ---------------------------------------------------------------------------
-# Differential harness smoke run (tests/cpp/difftest). Defaults to cached
+# Differential harness smoke run (tests/cpp/difftest). NOT an Ada parity gate
+# while the Ada golden is hand-authored (see difftest README). Defaults to cached
 # golden output for the Ada reference (--ada-golden) so that no Ada toolchain
 # is needed. Override DIFF_ARGS, e.g. DIFF_ARGS="--ada-bin obj/ada/uxas_ada".
 # ---------------------------------------------------------------------------

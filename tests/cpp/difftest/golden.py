@@ -24,7 +24,7 @@ def save(path: str, scenario: str, binary: str,
         fd.write("\n")
 
 
-def load(path: str, scenario: Optional[str] = None) -> List[Dict[str, Any]]:
+def _read(path: str, scenario: Optional[str] = None) -> Dict[str, Any]:
     try:
         with open(path, "r", encoding="utf-8") as fd:
             doc = json.load(fd)
@@ -39,4 +39,17 @@ def load(path: str, scenario: Optional[str] = None) -> List[Dict[str, Any]]:
     if scenario is not None and doc.get("scenario") != scenario:
         raise GoldenError("%s: golden is for scenario %r, not %r" %
                           (path, doc.get("scenario"), scenario))
-    return list(doc.get("messages", []))
+    return doc
+
+
+def load(path: str, scenario: Optional[str] = None) -> List[Dict[str, Any]]:
+    return list(_read(path, scenario).get("messages", []))
+
+
+def provenance(path: str) -> str:
+    return str(_read(path).get("provenance", "unknown"))
+
+
+def is_recorded(path: str) -> bool:
+    """False for goldens that were written by hand, not by --record-golden."""
+    return not provenance(path).startswith("hand-authored")

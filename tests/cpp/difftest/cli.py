@@ -28,6 +28,10 @@ def _obtain(sc, side, args, log):
     gpath = golden.golden_path(gdir, sc.name, side)
     if use_golden:
         log("%s: using golden %s" % (side, gpath))
+        if not golden.is_recorded(gpath):
+            log("WARNING: %s golden is hand-authored, NOT recorded from a "
+                "real %s run; this run does not prove Ada parity"
+                % (side, side))
         return golden.load(gpath, sc.name)
     exe = runner.find_binary(side, getattr(args, side + "_bin"))
     if exe is None:

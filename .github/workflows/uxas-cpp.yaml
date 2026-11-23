@@ -143,7 +143,7 @@ jobs:
                   python3 -m pip install pytest pyzmq e3-core
                   python3 -m pytest difftest/tests -q
 
-            - name: Differential smoke (golden Ada output)
+            - name: Differential smoke (C++ startup check; Ada golden is hand-authored, no parity proof)
               run: |
                   cd OpenUxAS
                   make diff-smoke OBJECT_DIR="$OBJECT_DIR"
