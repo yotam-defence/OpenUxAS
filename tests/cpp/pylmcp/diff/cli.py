@@ -10,7 +10,7 @@ import sys
 import time
 from typing import List, Optional
 
-from .capture import Capture, GoldenError
+from .capture import GoldenError, load_golden_file
 from .config import build_config
 from .differ import dump_canonical
 from .runner import RunContext, RunError, record_cpp_golden, run_scenario
@@ -175,9 +175,8 @@ def cmd_record(a) -> int:
 
 def cmd_show(a) -> int:
     try:
-        with open(a.golden_file) as fd:
-            cap = Capture.from_dict(json.load(fd))
-    except (OSError, ValueError, GoldenError) as e:
+        cap = load_golden_file(a.golden_file)
+    except GoldenError as e:
         print("error: %s" % e, file=sys.stderr)
         return EXIT_USAGE
     print(dump_canonical(cap.decode()))

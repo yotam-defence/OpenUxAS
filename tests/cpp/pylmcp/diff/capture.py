@@ -80,19 +80,24 @@ def save_golden(golden_dir: str, capture: Capture) -> str:
     return path
 
 
-def load_golden(golden_dir: str, scenario: str, side: str,
-                fingerprint: Optional[str] = None,
-                allow_stale: bool = False) -> Capture:
-    """Load a golden capture; raise GoldenError if missing/stale."""
-    path = golden_path(golden_dir, scenario, side)
+def load_golden_file(path: str) -> Capture:
+    """Load a golden capture from an explicit path; raise GoldenError."""
     try:
         with open(path, "r", encoding="utf-8") as fd:
-            cap = Capture.from_dict(json.load(fd))
+            return Capture.from_dict(json.load(fd))
     except OSError:
         raise GoldenError("no golden file %s (record with --update-golden)"
                           % path)
     except ValueError as e:
         raise GoldenError("%s: invalid JSON: %s" % (path, e))
+
+
+def load_golden(golden_dir: str, scenario: str, side: str,
+                fingerprint: Optional[str] = None,
+                allow_stale: bool = False) -> Capture:
+    """Load a golden capture; raise GoldenError if missing/stale."""
+    path = golden_path(golden_dir, scenario, side)
+    cap = load_golden_file(path)
     if fingerprint and cap.fingerprint != fingerprint and not allow_stale:
         raise GoldenError(
             "golden %s is stale: scenario changed since it was recorded "
