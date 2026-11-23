@@ -4,6 +4,9 @@ import os
 from e3.fs import sync_tree, mkdir, rm
 from e3.os.fs import unixpath
 
+# C++ standard for cmake builds; keep in sync with CXX_STD in the Makefile
+CXX_STD = 'c++17'
+
 
 class Common(Anod):
     """Helpers for UxAS build."""
@@ -110,7 +113,7 @@ class Common(Anod):
 
         # Compute cmake command line
         cmake_cmd = ['cmake']
-        cmake_cmd.append('-DCMAKE_CXX_FLAGS=-std=c++17')
+        cmake_cmd.append('-DCMAKE_CXX_FLAGS=-std=%s' % CXX_STD)
         if params:
             for var, value in params.items():
                 cmake_cmd.append('-D%s=%s' % (var, value))
