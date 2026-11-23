@@ -4,8 +4,6 @@ import sys
 import threading
 import time
 
-from . import EXIT_INFRA
-
 
 class LiveError(Exception):
     pass
