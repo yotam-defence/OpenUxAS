@@ -1,0 +1,73 @@
+{
+  "name": "heartbeat_smoke",
+  "description": "KeyValuePair heartbeat sequence (no AutomationRequest). Messages are replayed into the bus and echoed by the bridge on both stacks.",
+  "ada_cfg": "heartbeat_smoke_ada.xml",
+  "ada_hub_cfg": "heartbeat_smoke_ada_hub.xml",
+  "cpp_cfg": "heartbeat_smoke_cpp.xml",
+  "startup_delay_ms": 1500,
+  "settle_ms": 1000,
+  "capture": [
+    ""
+  ],
+  "normalization": {
+    "window_ms": 250,
+    "id_mode": "renumber"
+  },
+  "comparators": [
+    {
+      "name": "canonical"
+    }
+  ],
+  "messages": [
+    {
+      "class": "KeyValuePair",
+      "delay_ms": 100,
+      "source_entity_id": 100,
+      "source_service_id": 0,
+      "fields": {
+        "Key": "heartbeat",
+        "Value": "seq-0"
+      }
+    },
+    {
+      "class": "KeyValuePair",
+      "delay_ms": 100,
+      "source_entity_id": 100,
+      "source_service_id": 0,
+      "fields": {
+        "Key": "heartbeat",
+        "Value": "seq-1"
+      }
+    },
+    {
+      "class": "KeyValuePair",
+      "delay_ms": 100,
+      "source_entity_id": 100,
+      "source_service_id": 0,
+      "fields": {
+        "Key": "heartbeat",
+        "Value": "seq-2"
+      }
+    },
+    {
+      "class": "KeyValuePair",
+      "delay_ms": 100,
+      "source_entity_id": 100,
+      "source_service_id": 0,
+      "fields": {
+        "Key": "heartbeat",
+        "Value": "seq-3"
+      }
+    },
+    {
+      "class": "KeyValuePair",
+      "delay_ms": 100,
+      "source_entity_id": 100,
+      "source_service_id": 0,
+      "fields": {
+        "Key": "heartbeat",
+        "Value": "seq-4"
+      }
+    }
+  ]
+}
