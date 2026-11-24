@@ -94,14 +94,22 @@ def field_diffs(a, b, path="") -> List[str]:
     return [] if a == b else ["%s: %r != %r" % (path or "<root>", a, b)]
 
 
+def _by_step(ref, cand):
+    """Yield ``(step, ref_msgs, cand_msgs)`` for each step, in sorted order."""
+    r, c = defaultdict(list), defaultdict(list)
+    for m in ref:
+        r[m["step"]].append(m)
+    for m in cand:
+        c[m["step"]].append(m)
+    for step in sorted(set(r) | set(c)):
+        yield step, r.get(step, []), c.get(step, [])
+
+
 @register("canonical")
 def canonical(ref, cand, options):
     """Strict per-window multiset equality of canonical messages."""
     diffs: List[Difference] = []
-    steps = sorted({m["step"] for m in ref} | {m["step"] for m in cand})
-    for step in steps:
-        r = [m for m in ref if m["step"] == step]
-        c = [m for m in cand if m["step"] == step]
+    for step, r, c in _by_step(ref, cand):
         rest_c = list(c)
         unmatched_r = []
         for m in r:
@@ -134,14 +142,12 @@ def canonical(ref, cand, options):
 def types_only(ref, cand, options):
     """Compare only the multiset of message types per window (no content)."""
     diffs = []
-    for step in sorted({m["step"] for m in ref} | {m["step"] for m in cand}):
+    for step, r, c in _by_step(ref, cand):
         cr, cc = defaultdict(int), defaultdict(int)
-        for m in ref:
-            if m["step"] == step:
-                cr[m["type"]] += 1
-        for m in cand:
-            if m["step"] == step:
-                cc[m["type"]] += 1
+        for m in r:
+            cr[m["type"]] += 1
+        for m in c:
+            cc[m["type"]] += 1
         for t in sorted(set(cr) | set(cc)):
             if cr[t] != cc[t]:
                 diffs.append(Difference(

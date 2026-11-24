@@ -56,7 +56,8 @@ def build_parser():
     return p
 
 
-def _capture(impl, binary, sc, args):
+def _capture(impl, sc, args):
+    binary = runner.resolve_binary(impl, getattr(args, impl + "_bin"))
     r = runner.Runner(impl, binary, sc, workdir=args.workdir and
                       os.path.join(args.workdir, impl), pub=args.pub,
                       pull=args.pull, keep_workdir=bool(args.workdir),
@@ -70,6 +71,11 @@ def _capture(impl, binary, sc, args):
     if args.verbose:
         print("%s: captured %d messages" % (impl, len(recs)), file=sys.stderr)
     return recs
+
+
+def _record_golden(gpath, sc, recs, message, **kw):
+    golden.save(gpath, sc, "ada", recs, **kw)
+    print(message % gpath, file=sys.stderr)
 
 
 def main(argv=None):
@@ -120,24 +126,20 @@ def main(argv=None):
                 print("warning: %s" % doc.get("note", "bootstrap golden"),
                       file=sys.stderr)
         elif args.bootstrap_from_cpp:
-            ref = _capture("cpp", runner.resolve_binary("cpp", args.cpp_bin),
-                           sc, args)
-            golden.save(gpath, sc, "ada", ref, source="cpp")
-            print("recorded BOOTSTRAP golden from C++ (not Ada): %s" % gpath,
-                  file=sys.stderr)
+            ref = _capture("cpp", sc, args)
+            _record_golden(gpath, sc, ref,
+                           "recorded BOOTSTRAP golden from C++ (not Ada): %s",
+                           source="cpp")
             if args.record_only:
                 return EXIT_MATCH
             ref_label = "cpp(bootstrap golden)"
         else:
-            ref = _capture("ada", runner.resolve_binary("ada", args.ada_bin),
-                           sc, args)
+            ref = _capture("ada", sc, args)
             if args.record_golden:
-                golden.save(gpath, sc, "ada", ref)
-                print("recorded golden: %s" % gpath, file=sys.stderr)
+                _record_golden(gpath, sc, ref, "recorded golden: %s")
                 if args.record_only:
                     return EXIT_MATCH
-        cand = _capture("cpp", runner.resolve_binary("cpp", args.cpp_bin),
-                        sc, args)
+        cand = _capture("cpp", sc, args)
     except (golden.GoldenError, runner.InfraError) as e:
         print("infrastructure error: %s" % e, file=sys.stderr)
         return EXIT_INFRA
