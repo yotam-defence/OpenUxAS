@@ -103,7 +103,7 @@ class Runner:
         push = ctx.socket(zmq.PUSH)
         try:
             self.start()
-            self._pump(sub, None, self.sc.startup_s)  # let the process settle
+            self._pump(self.sc.startup_s)  # let the process settle
             if not self.alive():
                 raise InfraError("%s exited during startup (rc=%s):\n%s" % (
                     self.impl, self.proc.returncode, self.log_tail()))
@@ -111,10 +111,10 @@ class Runner:
             sub.connect(self.pub)
             push.setsockopt(zmq.LINGER, 1000)
             push.connect(self.pull)
-            self._pump(sub, zmq, 0.3)  # SUB slow-joiner guard
+            self._pump(0.3)  # SUB slow-joiner guard
             step = 0
             self.records = []
-            self._poll(sub, zmq, step, 0.0)
+            self._poll(sub, step, 0.0)
             for spec in self.sc.messages:
                 if not self.alive():
                     raise InfraError("%s died during replay (rc=%s):\n%s" % (
@@ -123,8 +123,8 @@ class Runner:
                 step += 1
                 delay = (spec.delay_s if spec.delay_s is not None
                          else self.sc.between_messages_s)
-                self._poll(sub, zmq, step, delay * self.scale)
-            self._poll(sub, zmq, step, self.sc.final_s * self.scale)
+                self._poll(sub, step, delay * self.scale)
+            self._poll(sub, step, self.sc.final_s * self.scale)
             return self.records
         finally:
             sub.close(0)
@@ -132,10 +132,10 @@ class Runner:
             ctx.term()
             self.stop()
 
-    def _pump(self, sub, zmq, seconds):
+    def _pump(self, seconds):
         time.sleep(seconds * self.scale)
 
-    def _poll(self, sub, zmq, step, seconds):
+    def _poll(self, sub, step, seconds):
         """Collect messages for ``seconds`` tagging them with ``step``."""
         deadline = time.monotonic() + seconds
         while True:
