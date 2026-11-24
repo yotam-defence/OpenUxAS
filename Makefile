@@ -46,11 +46,18 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 		     $(SOURCE_DIR)/VisilibityLib \
 	  	     resources/AutomationDiagramDataService
 
-# Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+# Compiler to be used - note the prefixed anod env here.
+# The compiler can be overridden with e.g. `make CXX=clang++`; the anod
+# environment prefix is preserved in that case.
+ifeq ($(origin CXX),default)
+    CXX_BIN:=g++
+else
+    CXX_BIN:=$(CXX)
+endif
+override CXX=$(ANODENV)$(CXX_BIN)
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
@@ -73,14 +80,32 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
+
+# GoogleTest: system installation (libgtest-dev) by default. Override with
+# GTEST_DIR (installation prefix) and/or GTEST_LIBS (link libraries).
+GTEST_DIR?=
+GTEST_LIBS?=-lgtest -lgtest_main -lpthread
+ifneq ($(GTEST_DIR),)
+    GTEST_INCLUDES:=-I$(GTEST_DIR)/include
+    GTEST_LDFLAGS:=-L$(GTEST_DIR)/lib
+else
+    GTEST_INCLUDES:=
+    GTEST_LDFLAGS:=
+endif
+
+# Unit tests
+UNIT_TEST_DIR=tests/cpp/unit
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+UNIT_TEST_OBJECTS:=$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(UNIT_TEST_SOURCES))
+UNIT_TEST_BIN:=$(OBJECT_DIR)/unit_tests
 
 # Include flags
 INCLUDES=$(foreach source_dir, $(SOURCE_DIRS), -I$(source_dir))
@@ -135,6 +160,7 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -143,11 +169,15 @@ help:
 	@echo "   OBJECT_DIR: root directory containing objects and executable (default: 'obj')"
 	@echo "   ENABLE_WARNINGS: if 'true' enable all C++ warnings"
 	@echo "   ENABLE_COVERAGE: if 'true' compile uxas with gcov enabled"
+	@echo "   CXX: C++ compiler (default: g++), e.g. CXX=clang++"
+	@echo "   GTEST_DIR: GoogleTest install prefix (default: system gtest)"
+	@echo "   GTEST_LIBS: GoogleTest link libraries (default: -lgtest -lgtest_main -lpthread)"
 
 clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	rm -f $(UNIT_TEST_OBJECTS) $(UNIT_TEST_OBJECTS:.o=.o.d) $(UNIT_TEST_BIN)
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
 
@@ -162,8 +192,24 @@ $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
 	@echo "[Link uxas main]"
 	@$(CXX) -o $@ $^ $(LINKER_FLAGS) $(CXX_FLAGS)
 
+# Unit tests (GoogleTest). They only need liblmcp, not the uxas objects.
+$(OBJECT_DIR)/$(UNIT_TEST_DIR)/%.o: $(UNIT_TEST_DIR)/%.cpp
+	@mkdir -p `dirname $@`
+	@echo "[Compiling $<]"
+	@$(CXX) -c $< $(GTEST_INCLUDES) $(CXX_FLAGS) -MMD -MF $@.d -o $@
+
+$(UNIT_TEST_BIN): $(UNIT_TEST_OBJECTS)
+	@echo "[Link unit tests]"
+	@$(CXX) -o $@ $^ $(GTEST_LDFLAGS) $(GTEST_LIBS) -llmcp -lpthread $(CXX_FLAGS)
+
+test: $(UNIT_TEST_BIN)
+	@echo "[Run unit tests]"
+	$(UNIT_TEST_BIN)
+
+.PHONY: help clean all test
+
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
 
 # Include the Makefile fragments containing the dependencies
--include $(DEPS)
+-include $(DEPS) $(UNIT_TEST_OBJECTS:.o=.o.d)
