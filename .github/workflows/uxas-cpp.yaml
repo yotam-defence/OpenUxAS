@@ -69,6 +69,8 @@ jobs:
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
             - name: Unit tests (GoogleTest)
+              env:
+                  CXX_COMPILER: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
               run: |
                   cd OpenUxAS
                   ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
