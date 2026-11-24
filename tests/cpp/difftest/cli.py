@@ -27,6 +27,11 @@ def build_parser():
                         "compare C++ against it")
     g.add_argument("--use-golden", action="store_true",
                    help="do not run Ada; use the stored golden capture")
+    p.add_argument("--bootstrap-from-cpp", action="store_true",
+                   help="with --record-golden: record the golden from the C++ "
+                        "binary instead of Ada (only when no Ada toolchain is "
+                        "available). The golden is marked as a bootstrap "
+                        "golden in its metadata; re-record from uxas_ada later")
     p.add_argument("--golden-dir", default=os.environ.get("DIFFTEST_GOLDEN_DIR"),
                    help="golden directory (default: <scenario dir>/golden, "
                         "or difftest/golden)")
@@ -100,9 +105,29 @@ def main(argv=None):
     gdir = args.golden_dir or (os.path.join(os.path.dirname(sc.path), "golden")
                                if sc.path else DEFAULT_GOLDEN_DIR)
     gpath = golden.golden_path(gdir, sc.name, "ada")
+    ref_label = "ada"
     try:
+        if args.bootstrap_from_cpp and not args.record_golden:
+            print("error: --bootstrap-from-cpp requires --record-golden",
+                  file=sys.stderr)
+            return EXIT_USAGE
         if args.use_golden:
-            ref = golden.load(gpath, sc, args.allow_stale_golden)
+            doc = golden.load_doc(gpath, sc, args.allow_stale_golden)
+            ref = doc["records"]
+            ref_label = "ada(golden)"
+            if doc.get("bootstrap"):
+                ref_label = "%s(bootstrap golden)" % doc.get("source_impl")
+                print("warning: %s" % doc.get("note", "bootstrap golden"),
+                      file=sys.stderr)
+        elif args.bootstrap_from_cpp:
+            ref = _capture("cpp", runner.resolve_binary("cpp", args.cpp_bin),
+                           sc, args)
+            golden.save(gpath, sc, "ada", ref, source="cpp")
+            print("recorded BOOTSTRAP golden from C++ (not Ada): %s" % gpath,
+                  file=sys.stderr)
+            if args.record_only:
+                return EXIT_MATCH
+            ref_label = "cpp(bootstrap golden)"
         else:
             ref = _capture("ada", runner.resolve_binary("ada", args.ada_bin),
                            sc, args)
@@ -118,7 +143,7 @@ def main(argv=None):
         return EXIT_INFRA
 
     return compare_and_report(sc, ref, cand, args.report_json,
-                              "ada(golden)" if args.use_golden else "ada")
+                              ref_label)
 
 
 def compare_and_report(sc, ref, cand, report_json=None, ref_label="ada"):

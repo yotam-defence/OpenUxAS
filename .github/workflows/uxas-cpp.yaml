@@ -72,10 +72,28 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
-            - name: Unit tests (GoogleTest)
+            - name: Install difftest dependencies (needed by make test)
+              run: |
+                  python3 -m pip install pyzmq e3-core
+
+            - name: Unit tests (GoogleTest + difftest via make test)
               run: |
                   cd OpenUxAS
                   ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Difftest unit tests
+              run: |
+                  cd OpenUxAS/tests/cpp
+                  python3 -m unittest discover -s difftest/tests -t .
+
+            # Without an Ada binary this compares the C++ capture against the
+            # committed (bootstrap, C++-recorded) golden. Set UXAS_ADA_BIN for
+            # a live Ada vs C++ diff.
+            - name: Difftest smoke (heartbeat)
+              run: |
+                  cd OpenUxAS/tests/cpp
+                  python3 -m difftest difftest/scenarios/smoke_heartbeat.json \
+                      --use-golden --cpp-bin "$GITHUB_WORKSPACE/OpenUxAS/obj/cpp/uxas"
 
             - name: Functional tests OpenUxAS C++
               run: |

@@ -28,7 +28,7 @@ def resolve_binary(impl: str, explicit: Optional[str]) -> str:
             "%s binary not found (use --%s-bin or $%s%s)" % (
                 impl, impl, env,
                 "; or use --use-golden to avoid running Ada" if impl == "ada" else ""))
-    return path
+    return os.path.abspath(path)
 
 
 class Runner:
@@ -37,7 +37,8 @@ class Runner:
     def __init__(self, impl: str, binary: str, scenario: Scenario,
                  workdir: Optional[str] = None, pub=None, pull=None,
                  keep_workdir=False, time_scale: float = 1.0):
-        self.impl, self.binary, self.sc = impl, binary, scenario
+        self.impl, self.sc = impl, scenario
+        self.binary = os.path.abspath(binary)  # we chdir into the workdir
         self.pub, self.pull = pub or scenario.pub, pull or scenario.pull
         self.workdir = workdir or tempfile.mkdtemp(prefix="difftest-%s-" % impl)
         self.keep_workdir = keep_workdir

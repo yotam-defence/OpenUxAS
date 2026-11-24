@@ -23,6 +23,7 @@ tests need no binaries, pyzmq or pylmcp.
 | `--ada-bin`, `--cpp-bin` | binaries (else `$UXAS_ADA_BIN` / `$UXAS_CPP_BIN`, else `uxas_ada` / `uxas` on PATH) |
 | `--record-golden` | run Ada, store capture in the golden file, then compare C++ (`--record-only` stops after recording) |
 | `--use-golden` | do not run Ada; compare C++ with the stored golden capture |
+| `--bootstrap-from-cpp` | with `--record-golden`: record the golden from the C++ binary (no Ada available); marked as a bootstrap golden |
 | `--golden-dir` | default `<scenario dir>/golden` (`$DIFFTEST_GOLDEN_DIR`); file `<name>.ada.golden.json` |
 | `--allow-stale-golden` | accept a golden whose scenario fingerprint no longer matches |
 | `--plugin MODULE` | import a module registering comparators (repeatable) |
@@ -87,8 +88,43 @@ by the first matching entry; the rest go to `canonical`.
 When the Ada toolchain is unavailable, record once on a machine that has
 `uxas_ada` (`--record-golden`), commit `golden/<name>.ada.golden.json`, and run
 elsewhere with `--use-golden`. The golden stores raw hex plus the decoded
-object and a fingerprint of the scenario's inputs; changing the messages,
-services or settle values makes it stale (exit 3) until re-recorded.
+object, a fingerprint of the scenario's inputs, and metadata (`source_impl`,
+`bootstrap`, `note`, `recorded_at`). Changing the messages, services or settle
+values makes it stale (exit 3) until re-recorded.
+
+### Bootstrap golden for `smoke_heartbeat` (read this)
+
+`scenarios/golden/smoke_heartbeat.ada.golden.json` is currently a **bootstrap
+golden recorded from the C++ binary (`obj/cpp/uxas`), NOT from `uxas_ada`**,
+because no Ada/GNAT toolchain was available when it was committed. Its metadata
+says so (`"bootstrap": true`, `"source_impl": "cpp"`) and the CLI prints a
+warning and labels the report `cpp(bootstrap golden)`. It therefore only guards
+the C++ port against regressions (and exercises the harness end to end); it is
+NOT evidence of Ada/C++ parity. It was produced with:
+
+```
+cd tests/cpp
+python3 -m difftest difftest/scenarios/smoke_heartbeat.json --record-golden --bootstrap-from-cpp --cpp-bin ../../obj/cpp/uxas
+```
+
+When Ada is available, re-record it from the reference and commit the result
+(this replaces the file and sets `"bootstrap": false`, `"source_impl": "ada"`):
+
+```
+python3 -m difftest difftest/scenarios/smoke_heartbeat.json --record-golden --ada-bin /path/uxas_ada --cpp-bin ../../obj/cpp/uxas
+```
+
+## make / CI
+
+* `make difftest-unit`: harness unit tests (python only).
+* `make difftest-smoke`: builds `obj/cpp/uxas`, then runs the smoke scenario.
+  With `UXAS_ADA_BIN=/path/uxas_ada` it is a live Ada vs C++ diff; without it,
+  C++ is compared with the committed golden (`--use-golden`).
+* `make test` runs the GoogleTest suite, `difftest-unit` and `difftest-smoke`.
+  The smoke run needs `pyzmq` (`pip install pyzmq`) and `pylmcp`'s `e3`
+  dependency (`pip install e3-core`).
+* CI (`.github/workflows/uxas-cpp.yaml`) runs the difftest unit tests and the
+  `--use-golden` smoke after the build.
 
 ## Tests
 
@@ -102,7 +138,8 @@ python3 -m unittest discover -s difftest/tests -t .
 
 * Ada `uxas_ada` is assumed to accept the same `Bridge`/`Service` XML schema and
   `-cfgPath` switch as C++ (verified from `src/ada/src/main/uxas_ada.adb`);
-  not exercised end-to-end here (no binaries/pyzmq in the authoring sandbox).
+  the Ada side has never been exercised end to end (no GNAT available); the C++
+  side has been run against the real `obj/cpp/uxas` with pyzmq.
 * If pylmcp/e3 cannot be imported, captures degrade to header + raw payload
   comparison.
 * The scenario cannot yet inject messages from multiple concurrent sources or

@@ -1,0 +1,60 @@
+{
+ "bootstrap": true,
+ "fingerprint": "cb9c2f48371e4f5931a7a6afc967c7182b5a38529b0792058e2ac7df701c3151",
+ "impl": "ada",
+ "note": "BOOTSTRAP golden: recorded from the C++ binary (obj/cpp/uxas), NOT from uxas_ada, because no Ada toolchain was available. It only guards C++ against regressions; re-record it from uxas_ada with --record-golden when Ada is available.",
+ "recorded_at": "2026-11-24T21:01:39Z",
+ "records": [
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "decode_error": null,
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "1"
+   },
+   "raw_hex": "6166726c2e636d6173692e4b657956616c756550616972246c6d63707c6166726c2e636d6173692e4b657956616c7565506169727c7c3130307c30244c4d43500000001c01434d4153490000000000000200030009686561727462656174000131000006a6",
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "step": 1,
+   "t": 1795554097.3139362
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "decode_error": null,
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "2"
+   },
+   "raw_hex": "6166726c2e636d6173692e4b657956616c756550616972246c6d63707c6166726c2e636d6173692e4b657956616c7565506169727c7c3130307c30244c4d43500000001c01434d4153490000000000000200030009686561727462656174000132000006a7",
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "step": 2,
+   "t": 1795554097.614092
+  },
+  {
+   "address": "afrl.cmasi.KeyValuePair",
+   "content_type": "lmcp",
+   "decode_error": null,
+   "descriptor": "afrl.cmasi.KeyValuePair",
+   "obj": {
+    "Key": "heartbeat",
+    "Value": "3"
+   },
+   "raw_hex": "6166726c2e636d6173692e4b657956616c756550616972246c6d63707c6166726c2e636d6173692e4b657956616c7565506169727c7c3130307c30244c4d43500000001c01434d4153490000000000000200030009686561727462656174000133000006a8",
+   "source_entity_id": 100,
+   "source_group": "",
+   "source_service_id": 0,
+   "step": 3,
+   "t": 1795554097.9142082
+  }
+ ],
+ "scenario": "smoke_heartbeat",
+ "schema": 1,
+ "source_impl": "cpp"
+}

@@ -7,6 +7,7 @@ import contextlib
 import io
 import json
 import os
+import sys
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
@@ -219,6 +220,41 @@ class GoldenAndCliTests(unittest.TestCase):
         smoke = os.path.join(SCEN_DIR, "smoke_heartbeat.json")
         rc = cli.main(["--use-golden", "--golden-dir", self.tmp.name, smoke])
         self.assertEqual(rc, 3)
+
+    def test_bootstrap_golden_metadata_and_load(self):
+        p = golden.golden_path(self.tmp.name, "g")
+        recs = [{"step": 1, "descriptor": "d", "obj": {"a": 1}}]
+        golden.save(p, self.sc, "ada", recs, source="cpp")
+        doc = golden.load_doc(p, self.sc)
+        self.assertTrue(doc["bootstrap"])
+        self.assertEqual(doc["source_impl"], "cpp")
+        self.assertIn("NOT from uxas_ada", doc["note"])
+        self.assertEqual(doc["records"], recs)
+        golden.save(p, self.sc, "ada", recs)
+        doc = golden.load_doc(p, self.sc)
+        self.assertFalse(doc["bootstrap"])
+        self.assertEqual(doc["source_impl"], "ada")
+
+    def test_committed_smoke_golden_is_fresh_and_marked(self):
+        from difftest.scenario import load_scenario
+        smoke = os.path.join(SCEN_DIR, "smoke_heartbeat.json")
+        sc = load_scenario(smoke)
+        path = golden.golden_path(os.path.join(SCEN_DIR, "golden"), sc.name)
+        doc = golden.load_doc(path, sc)  # raises if stale/missing
+        self.assertEqual(len(doc["records"]), 3)
+        if doc["bootstrap"]:
+            self.assertEqual(doc["source_impl"], "cpp")
+
+    def test_bootstrap_requires_record_golden(self):
+        smoke = os.path.join(SCEN_DIR, "smoke_heartbeat.json")
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(
+                cli.main(["--bootstrap-from-cpp", smoke]), EXIT_USAGE)
+
+    def test_resolve_binary_is_absolute(self):
+        from difftest import runner
+        rel = os.path.relpath(sys.executable)
+        self.assertTrue(os.path.isabs(runner.resolve_binary("cpp", rel)))
 
 
 if __name__ == "__main__":

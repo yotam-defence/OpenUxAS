@@ -160,7 +160,12 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
-	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   test:  Run the GoogleTest unit tests (tests/cpp/unit), the difftest"
+	@echo "          unit tests and the smoke differential run"
+	@echo "   difftest-unit:  Run the difftest harness unit tests (python only)"
+	@echo "   difftest-smoke: Build uxas and run tests/cpp/difftest smoke scenario."
+	@echo "          UXAS_ADA_BIN set: live Ada vs C++ diff; unset: C++ vs the"
+	@echo "          committed golden (currently a C++-recorded bootstrap golden)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -202,11 +207,35 @@ $(UNIT_TEST_BIN): $(UNIT_TEST_OBJECTS)
 	@echo "[Link unit tests]"
 	@$(CXX) -o $@ $^ $(GTEST_LDFLAGS) $(GTEST_LIBS) -llmcp -lpthread $(CXX_FLAGS)
 
+# Differential test harness (tests/cpp/difftest). Needs python3 and pyzmq
+# (smoke only). With UXAS_ADA_BIN set the smoke scenario is a live Ada-vs-C++
+# diff, otherwise the C++ capture is compared with the committed golden.
+PYTHON?=python3
+DIFFTEST_DIR=tests/cpp
+SMOKE_SCENARIO=difftest/scenarios/smoke_heartbeat.json
+
+difftest-unit:
+	@echo "[Run difftest unit tests]"
+	cd $(DIFFTEST_DIR) && $(PYTHON) -m unittest discover -s difftest/tests -t .
+
+difftest-smoke: $(OBJECT_DIR)/uxas
+	@echo "[Run difftest smoke scenario]"
+ifneq ($(strip $(UXAS_ADA_BIN)),)
+	cd $(DIFFTEST_DIR) && $(PYTHON) -m difftest $(SMOKE_SCENARIO) \
+		--ada-bin "$(abspath $(UXAS_ADA_BIN))" --cpp-bin "$(abspath $(OBJECT_DIR)/uxas)"
+else
+	@echo "UXAS_ADA_BIN not set: comparing C++ against the committed golden"
+	cd $(DIFFTEST_DIR) && $(PYTHON) -m difftest $(SMOKE_SCENARIO) --use-golden \
+		--cpp-bin "$(abspath $(OBJECT_DIR)/uxas)"
+endif
+
 test: $(UNIT_TEST_BIN)
 	@echo "[Run unit tests]"
 	$(UNIT_TEST_BIN)
+	$(MAKE) difftest-unit
+	$(MAKE) difftest-smoke
 
-.PHONY: help clean all test
+.PHONY: help clean all test difftest-unit difftest-smoke
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
