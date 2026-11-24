@@ -47,10 +47,12 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+# Compiler executable (override from environment/command line, e.g. clang++)
+CXX_COMPILER?=g++
+CXX=$(ANODENV)$(CXX_COMPILER)
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
@@ -73,11 +75,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -135,19 +137,25 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
 	@echo "User variables:"
+	@echo "   CXX_COMPILER: C++ compiler executable (default: g++)"
 	@echo "   DEBUG_BUILD: if 'true' then display full compilation command line"
 	@echo "   OBJECT_DIR: root directory containing objects and executable (default: 'obj')"
 	@echo "   ENABLE_WARNINGS: if 'true' enable all C++ warnings"
 	@echo "   ENABLE_COVERAGE: if 'true' compile uxas with gcov enabled"
+	@echo "   GTEST_INCLUDE_DIR / GTEST_LIB_DIR: optional GoogleTest include / library dirs"
+	@echo "   UNIT_TEST_DIR: root of the unit tests (default: 'tests/cpp/unit')"
+	@echo "   UNIT_TEST_FILTER: optional --gtest_filter value for 'make test'"
 
 clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	rm -rf $(UNIT_TEST_BUILD_DIR)
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
 
@@ -161,6 +169,41 @@ $(OBJECT_DIR)/uxas.o: $(SOURCE_DIR)/UxAS_Main.cpp
 $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
 	@echo "[Link uxas main]"
 	@$(CXX) -o $@ $^ $(LINKER_FLAGS) $(CXX_FLAGS)
+
+# ---------------------------------------------------------------------------
+# Unit tests (GoogleTest)
+#
+# Sources: tests/cpp/unit/*.cpp. GoogleTest is taken from the system
+# (libgtest-dev) unless GTEST_INCLUDE_DIR / GTEST_LIB_DIR are overridden.
+# Tests that need liblmcp (e.g. test_bytebuffers.cpp) require the generated
+# LMCP library/headers to be on the include/library path (done by anod).
+# ---------------------------------------------------------------------------
+UNIT_TEST_DIR=tests/cpp/unit
+UNIT_TEST_BUILD_DIR=$(OBJECT_DIR)/unit_tests
+UNIT_TEST_FILTER=
+GTEST_INCLUDE_DIR=
+GTEST_LIB_DIR=
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+UNIT_TEST_OBJECTS:=$(patsubst %.cpp,$(UNIT_TEST_BUILD_DIR)/%.o,$(UNIT_TEST_SOURCES))
+UNIT_TEST_INCLUDES=$(if $(GTEST_INCLUDE_DIR),-I$(GTEST_INCLUDE_DIR)) -I$(UNIT_TEST_DIR)
+UNIT_TEST_LIBS=$(if $(GTEST_LIB_DIR),-L$(GTEST_LIB_DIR)) -lgtest -lgtest_main -llmcp -lpthread
+
+$(UNIT_TEST_BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	@echo "[Compiling $<]"
+	@$(CXX) -c $< $(UNIT_TEST_INCLUDES) $(CXX_FLAGS) -o $@
+
+$(UNIT_TEST_BUILD_DIR)/uxas_unit_tests: $(UNIT_TEST_OBJECTS)
+	@echo "[Link unit tests]"
+	@$(CXX) -o $@ $^ $(UNIT_TEST_LIBS) $(CXX_FLAGS)
+
+unit-tests-build: $(UNIT_TEST_BUILD_DIR)/uxas_unit_tests
+
+test: unit-tests-build
+	@echo "[Run unit tests]"
+	@$(UNIT_TEST_BUILD_DIR)/uxas_unit_tests $(if $(UNIT_TEST_FILTER),--gtest_filter=$(UNIT_TEST_FILTER))
+
+.PHONY: test unit-tests-build
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))

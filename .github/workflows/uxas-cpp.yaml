@@ -31,6 +31,7 @@ jobs:
                     {os: ubuntu-22.04, python: '3.10'},
                     {os: ubuntu-24.04, python: '3.12'}
                 ]
+                compiler: [gcc, clang]
                 component: [uxas]
                 qualifier: [scenario=release, scenario=gcov]
         runs-on: ${{ matrix.env.os }}
@@ -55,10 +56,22 @@ jobs:
                   cd OpenUxAS
                   infrastructure/install -vv --no-gnat --no-java -y
 
+            - name: Install GoogleTest and compiler
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y libgtest-dev ${{ matrix.compiler == 'clang' && 'clang' || 'g++' }}
+
             - name: Build OpenUxAS C++
+              env:
+                  CXX_COMPILER: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
               run: |
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Unit tests (GoogleTest)
+              run: |
+                  cd OpenUxAS
+                  ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
             - name: Test OpenUxAS C++
               run: |
