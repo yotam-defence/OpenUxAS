@@ -9,7 +9,7 @@ import _path  # noqa: F401
 from uxas_diff import comparators, golden
 from uxas_diff.canon import canonicalise
 from uxas_diff.cli import main
-from uxas_diff.diffing import diff_canonical, diff_records, select_comparator
+from uxas_diff.diffing import diff_records, select_comparator
 
 
 def cm(type_, obj, window=0):
