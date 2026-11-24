@@ -16,8 +16,8 @@ Placement: `tests/diff` is a sibling of `tests/cpp`, and imports the
 `pylmcp` package from `tests/cpp/pylmcp` (override the directory containing
 `pylmcp` with `$PYLMCP_PATH`; the default is `tests/cpp`). `make test` runs
 the unit tests and the golden smoke run (`make diff-unit-tests`,
-`make diff-smoke`); the smoke run is skipped with a message only when
-`e3-core`/`pyzmq` are not installed.
+`make diff-smoke`); the smoke run fails when
+`e3-core`/`pyzmq` are not installed, unless `ALLOW_SMOKE_SKIP=1` is passed.
 
 Run from this directory (`tests/diff`) or put it on `PYTHONPATH`.
 

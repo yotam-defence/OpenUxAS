@@ -201,10 +201,11 @@ unit-tests-build: $(UNIT_TEST_BUILD_DIR)/uxas_unit_tests
 
 # Differential harness (tests/diff). The unit tests need only the python
 # stdlib. The smoke run starts the C++ uxas and replays messages with pylmcp,
-# which needs the python packages e3-core and pyzmq; it is skipped (with a
-# message) only if those are not importable.
+# which needs the python packages e3-core and pyzmq; it fails if those are not
+# importable unless ALLOW_SMOKE_SKIP=1 is given (for dev boxes without them).
 DIFF_DIR=tests/diff
 PYTHON3=python3
+ALLOW_SMOKE_SKIP?=
 UXAS_BIN?=$(abspath $(OBJECT_DIR))/uxas
 PYLMCP_DIR=$(abspath tests/cpp)
 
@@ -222,7 +223,8 @@ diff-smoke: all
 	    cd $(DIFF_DIR) && UXAS_BIN="$(UXAS_BIN)" PYTHONPATH="$(PYLMCP_DIR)$${PYTHONPATH:+:$$PYTHONPATH}" \
 	        $(PYTHON3) -m uxas_diff run smoke_heartbeat --golden; \
 	else \
-	    echo "[SKIP differential smoke: python packages e3-core and/or pyzmq not installed (pip install e3-core pyzmq)]"; \
+	    echo "[diff-smoke: python packages e3-core and/or pyzmq not importable (pip install e3-core pyzmq)]" >&2; \
+	    if [ -n "$(ALLOW_SMOKE_SKIP)" ]; then echo "[SKIP differential smoke (ALLOW_SMOKE_SKIP set)]"; else exit 1; fi; \
 	fi
 
 test: unit-tests diff-unit-tests diff-smoke
