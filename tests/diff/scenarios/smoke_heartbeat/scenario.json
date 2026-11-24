@@ -1,0 +1,107 @@
+{
+  "name": "smoke_heartbeat",
+  "description": "Heartbeat sequence of one AirVehicleConfiguration then periodic AirVehicleState messages (no AutomationRequest, no KeyValuePair entries) through the validator service and PublishPull bridge.",
+  "configs": {
+    "ada": "cfg_ada.xml",
+    "cpp": "cfg_cpp.xml",
+    "hub": "cfg_hub.xml"
+  },
+  "startup_settle_ms": 2000,
+  "messages": [
+    {
+      "delay_ms": 200,
+      "label": "AirVehicleConfiguration",
+      "object": {
+        "class": "afrl.cmasi.AirVehicleConfiguration",
+        "fields": {
+          "ID": 400,
+          "Label": "UAV 400",
+          "MinimumSpeed": 18.0,
+          "MaximumSpeed": 33.0,
+          "NominalSpeed": 22.0,
+          "NominalAltitude": 700.0
+        }
+      }
+    },
+    {
+      "delay_ms": 250,
+      "label": "AirVehicleState #1",
+      "object": {
+        "class": "afrl.cmasi.AirVehicleState",
+        "fields": {
+          "ID": 400,
+          "Time": 1000,
+          "Heading": 91.0,
+          "Airspeed": 22.0,
+          "EnergyAvailable": 100.0,
+          "Location": {
+            "class": "afrl.cmasi.Location3D",
+            "fields": {
+              "Latitude": 45.3171,
+              "Longitude": -120.9913,
+              "Altitude": 700.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "delay_ms": 250,
+      "label": "AirVehicleState #2",
+      "object": {
+        "class": "afrl.cmasi.AirVehicleState",
+        "fields": {
+          "ID": 400,
+          "Time": 2000,
+          "Heading": 92.0,
+          "Airspeed": 22.0,
+          "EnergyAvailable": 100.0,
+          "Location": {
+            "class": "afrl.cmasi.Location3D",
+            "fields": {
+              "Latitude": 45.3171,
+              "Longitude": -120.9903,
+              "Altitude": 700.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "delay_ms": 250,
+      "label": "AirVehicleState #3",
+      "object": {
+        "class": "afrl.cmasi.AirVehicleState",
+        "fields": {
+          "ID": 400,
+          "Time": 3000,
+          "Heading": 93.0,
+          "Airspeed": 22.0,
+          "EnergyAvailable": 100.0,
+          "Location": {
+            "class": "afrl.cmasi.Location3D",
+            "fields": {
+              "Latitude": 45.3171,
+              "Longitude": -120.9893,
+              "Altitude": 700.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "delay_ms": 500,
+      "label": "settle"
+    }
+  ],
+  "capture": {
+    "tail_ms": 1500
+  },
+  "canon": {
+    "window": "all"
+  },
+  "comparators": {
+    "*": "canonical"
+  },
+  "plugins": []
+}
