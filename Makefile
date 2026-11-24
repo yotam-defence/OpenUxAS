@@ -137,7 +137,7 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
-	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   test:  Run unit-tests, diff-unit-tests and diff-smoke (tests/cpp/unit, tests/diff)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -199,11 +199,35 @@ $(UNIT_TEST_BUILD_DIR)/uxas_unit_tests: $(UNIT_TEST_OBJECTS)
 
 unit-tests-build: $(UNIT_TEST_BUILD_DIR)/uxas_unit_tests
 
-test: unit-tests-build
+# Differential harness (tests/diff). The unit tests need only the python
+# stdlib. The smoke run starts the C++ uxas and replays messages with pylmcp,
+# which needs the python packages e3-core and pyzmq; it is skipped (with a
+# message) only if those are not importable.
+DIFF_DIR=tests/diff
+PYTHON3=python3
+UXAS_BIN?=$(abspath $(OBJECT_DIR))/uxas
+PYLMCP_DIR=$(abspath tests/cpp)
+
+unit-tests: unit-tests-build
 	@echo "[Run unit tests]"
 	@$(UNIT_TEST_BUILD_DIR)/uxas_unit_tests $(if $(UNIT_TEST_FILTER),--gtest_filter=$(UNIT_TEST_FILTER))
 
-.PHONY: test unit-tests-build
+diff-unit-tests:
+	@echo "[Run tests/diff unit tests]"
+	@cd $(DIFF_DIR) && $(PYTHON3) -m unittest discover -s tests
+
+diff-smoke: all
+	@if $(PYTHON3) -c "import e3, zmq" >/dev/null 2>&1; then \
+	    echo "[Run differential smoke (golden)]"; \
+	    cd $(DIFF_DIR) && UXAS_BIN="$(UXAS_BIN)" PYTHONPATH="$(PYLMCP_DIR)$${PYTHONPATH:+:$$PYTHONPATH}" \
+	        $(PYTHON3) -m uxas_diff run smoke_heartbeat --golden; \
+	else \
+	    echo "[SKIP differential smoke: python packages e3-core and/or pyzmq not installed (pip install e3-core pyzmq)]"; \
+	fi
+
+test: unit-tests diff-unit-tests diff-smoke
+
+.PHONY: test unit-tests-build unit-tests diff-unit-tests diff-smoke
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))

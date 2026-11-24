@@ -12,6 +12,13 @@ need none of them. `run --golden` skips the Ada side but still has to start
 the C++ binary, so it needs `uxas`, zmq,
 pylmcp and e3.
 
+Placement: `tests/diff` is a sibling of `tests/cpp`, and imports the
+`pylmcp` package from `tests/cpp/pylmcp` (override the directory containing
+`pylmcp` with `$PYLMCP_PATH`; the default is `tests/cpp`). `make test` runs
+the unit tests and the golden smoke run (`make diff-unit-tests`,
+`make diff-smoke`); the smoke run is skipped with a message only when
+`e3-core`/`pyzmq` are not installed.
+
 Run from this directory (`tests/diff`) or put it on `PYTHONPATH`.
 
 ## CLI
@@ -143,6 +150,11 @@ heartbeats. `run --golden` prints a warning for synthetic goldens. Replace
 it on a machine with the Ada build:
 
     UXAS_BIN=... UXAS_ADA_BIN=... python3 -m uxas_diff record smoke_heartbeat
+
+**Known gap: the golden is synthetic. Re-record with
+`record smoke_heartbeat` once the Ada toolchain is available (milestone 2
+task).** Until then the smoke run only checks that the C++ `uxas` matches
+the expectation encoded in the synthetic golden, not real Ada behaviour.
 
 ## Smoke scenario
 

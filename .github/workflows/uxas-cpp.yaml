@@ -8,6 +8,7 @@ on:
             - 'anod'
             - 'src/cpp/**'
             - 'tests/cpp/**'
+            - 'tests/diff/**'
     pull_request:
         paths:
             - 'infrastructure/uxas/**'
@@ -17,6 +18,7 @@ on:
             - 'anod'
             - 'src/cpp/**'
             - 'tests/cpp/**'
+            - 'tests/diff/**'
     workflow_dispatch:
     schedule:
         - cron: '20 3 * * 4'
@@ -68,12 +70,31 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
-            - name: Unit tests (GoogleTest)
+            - name: Install python packages for tests/diff (pylmcp)
+              run: python3 -m pip install e3-core pyzmq
+
+            - name: Unit tests (GoogleTest, diff unit tests, diff smoke via make test)
               env:
                   CXX_COMPILER: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
               run: |
                   cd OpenUxAS
                   ./anod -v test ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
+
+            - name: Differential harness unit tests
+              run: |
+                  cd OpenUxAS/tests/diff
+                  python3 -m unittest discover -s tests
+
+            - name: Differential smoke run (golden)
+              env:
+                  PYTHONPATH: ${{ github.workspace }}/OpenUxAS/tests/cpp
+              run: |
+                  # anod builds into its own build space; locate the binary
+                  UXAS_BIN=$(find "$GITHUB_WORKSPACE" -type f -name uxas -perm -u+x -not -path '*/src/*' -not -path '*/examples/*' | head -1)
+                  test -n "$UXAS_BIN" || { echo "uxas binary not found"; exit 1; }
+                  export UXAS_BIN
+                  cd OpenUxAS/tests/diff
+                  python3 -m uxas_diff run smoke_heartbeat --golden
 
             - name: Test OpenUxAS C++
               run: |
