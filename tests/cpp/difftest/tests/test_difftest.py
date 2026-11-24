@@ -201,10 +201,13 @@ class GoldenAndCliTests(unittest.TestCase):
             self.sc, ref, [rec("T", {"a": 2})], out), EXIT_DIFF)
         self.assertFalse(json.load(open(out))["match"])
 
-    @contextlib.redirect_stdout(io.StringIO())
-    @contextlib.redirect_stderr(io.StringIO())
     def test_cli_no_binaries_paths(self):
         smoke = os.path.join(SCEN_DIR, "smoke_heartbeat.json")
+        with contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(io.StringIO()):
+            self._cli_checks(smoke)
+
+    def _cli_checks(self, smoke):
         self.assertEqual(cli.main(["--validate", smoke]), EXIT_MATCH)
         self.assertEqual(cli.main(["--dump-config", "cpp", smoke]), EXIT_MATCH)
         self.assertEqual(cli.main(["--list-comparators"]), EXIT_MATCH)
