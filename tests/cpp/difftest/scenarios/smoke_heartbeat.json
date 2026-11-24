@@ -1,0 +1,18 @@
+{
+  "name": "smoke_heartbeat",
+  "description": "Smoke scenario: a heartbeat-style KeyValuePair sequence with only the PublishPull bridge (no AutomationRequest). Both binaries must produce matching output.",
+  "entity_id": 100,
+  "entity_type": "Aircraft",
+  "bridge": {"pub": "tcp://127.0.0.1:5560", "pull": "tcp://127.0.0.1:5561"},
+  "services": [],
+  "settle": {"startup_s": 2.0, "between_messages_s": 0.3, "final_s": 1.0},
+  "messages": [
+    {"label": "hb-1", "lmcp": {"type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "1"}}},
+    {"label": "hb-2", "lmcp": {"type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "2"}}},
+    {"label": "hb-3", "lmcp": {"type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "3"}}}
+  ],
+  "normalise": {"window": "step", "id_mode": "renumber"},
+  "comparators": [
+    {"name": "canonical", "service": "bridge", "match": ["*"]}
+  ]
+}
