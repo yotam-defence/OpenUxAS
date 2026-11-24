@@ -104,6 +104,14 @@ class RunnerHelpersTest(unittest.TestCase):
             open(s, "w").write("a=${PUB_PORT} b=${PULL_PORT}")
             runner.render_config(s, t, 11, 22)
             self.assertEqual(open(t).read(), "a=11 b=22")
+            open(s, "w").write("${BRIDGE_SUBSCRIPTIONS}")
+            runner.render_config(s, t, 11, 22)
+            subs = open(t).read().count("SubscribeToMessage")
+            self.assertEqual(subs, 52)
+            self.assertTrue(open(t).read().startswith(
+                '<SubscribeToMessage MessageType="a" />'))
+            self.assertTrue(open(t).read().endswith(
+                '<SubscribeToMessage MessageType="Z" />'))
 
 
 if __name__ == "__main__":

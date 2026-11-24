@@ -3,6 +3,7 @@ import os
 import shutil
 import signal
 import socket
+import string
 import subprocess
 import tempfile
 import time
@@ -36,12 +37,21 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+# Bridge subscriptions shared by every scenario config: one
+# <SubscribeToMessage> per letter a-zA-Z. The first line carries no indent
+# because the ${BRIDGE_SUBSCRIPTIONS} token is already indented in the config.
+BRIDGE_SUBSCRIPTIONS = "\n        ".join(
+    '<SubscribeToMessage MessageType="%s" />' % c for c in string.ascii_letters)
+
+
 def render_config(src: str, dst: str, pub_port: int, pull_port: int) -> None:
-    """Copy a config substituting ${PUB_PORT} / ${PULL_PORT}."""
+    """Copy a config substituting ${PUB_PORT} / ${PULL_PORT} and
+    ${BRIDGE_SUBSCRIPTIONS}."""
     with open(src) as fd:
         text = fd.read()
     text = text.replace("${PUB_PORT}", str(pub_port)) \
-               .replace("${PULL_PORT}", str(pull_port))
+               .replace("${PULL_PORT}", str(pull_port)) \
+               .replace("${BRIDGE_SUBSCRIPTIONS}", BRIDGE_SUBSCRIPTIONS)
     with open(dst, "w") as fd:
         fd.write(text)
 

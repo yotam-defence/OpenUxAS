@@ -122,7 +122,8 @@ wrapped in a `Message` with entity id 100; `hex` steps are sent verbatim.
 The capture window starts at launch of the replay (after
 `startup_settle_ms`) and ends `capture.tail_ms` after the last step.
 
-Config files may use the placeholders `${PUB_PORT}` and `${PULL_PORT}`;
+Config files may use the placeholders `${PUB_PORT}` and `${PULL_PORT}`,
+and `${BRIDGE_SUBSCRIPTIONS}` (the shared a-zA-Z `SubscribeToMessage` list);
 the runner picks free ports per run so Ada and C++ runs never collide.
 
 Why a `hub` config: `uxas_ada` hosts only Ada services and reads the
