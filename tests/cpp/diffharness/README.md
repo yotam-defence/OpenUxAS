@@ -151,3 +151,14 @@ because no binaries were available when written. Re-record with
   divergences.
 * No service-specific comparators yet (milestones 3-6).
 * Not wired into the Makefile / CI (owned elsewhere).
+
+## Known limitation: Ada reference not yet recorded
+
+The Ada GNAT/Alire toolchain is not available in the sandbox, so
+`golden/smoke_heartbeat/ada.json` is synthetic and the default smoke gate
+(`make diff-smoke`, `--reference golden`) checks the C++ `uxas` output against
+that expected bridge echo only. To make it a true Ada-vs-C++ gate, build
+`uxas_ada` (`./anod build uxas-ada`) and run
+`tests/cpp/run-diff --cpp-bin obj/cpp/uxas --ada-bin <uxas_ada> --scenario smoke_heartbeat --update-golden`,
+then review and commit the recorded goldens. Use `make diff-smoke ADA_BIN=<path>`
+for a live comparison.

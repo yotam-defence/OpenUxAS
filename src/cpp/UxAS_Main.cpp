@@ -121,9 +121,9 @@ main(int argc, char** argv)
             std::cout << "#######################" << std::endl << std::endl;
             delete o;
             delete p;
-            if (strcmp(argv[i], ARG_VERSION_LONG) == 0)
+            if (argc == 2)
             {
-                return 0;
+                return 0;   // version query only: exit cleanly
             }
         }
         else

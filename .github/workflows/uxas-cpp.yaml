@@ -57,7 +57,8 @@ jobs:
             - name: Install GoogleTest
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y libgtest-dev
+                  sudo apt-get install -y libgtest-dev python3-venv
+                  python3 -m pip install --user pyzmq e3-core pytest
 
             - name: Install infrastructure
               run: |
@@ -106,7 +107,8 @@ jobs:
             - name: Install GoogleTest and compilers
               run: |
                   sudo apt-get update
-                  sudo apt-get install -y libgtest-dev clang
+                  sudo apt-get install -y libgtest-dev clang python3-venv
+                  python3 -m pip install --user pyzmq e3-core pytest
 
             - name: Install infrastructure
               run: |
