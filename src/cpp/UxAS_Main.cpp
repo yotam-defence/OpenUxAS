@@ -100,12 +100,12 @@ main(int argc, char** argv)
             i++;
             runUntil_sec = std::atoi(argv[i]);
         }
-        else if (strcmp(argv[i], ARG_HELP) == 0 || strcmp(argv[i], ARG_HELP_LONG) == 0)
+        else if (strcmp((const char *) argv[i], ARG_HELP) == 0 || strcmp((const char *) argv[i], ARG_HELP_LONG) == 0)
         {
             std::cout << "Usage: " << argv[0] << " [-cfgPath <file.xml>] [-runUntil <seconds>] [-version|--version] [-help|--help]" << std::endl;
             return 0;
         }
-        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0 || strcmp(argv[i], ARG_VERSION_LONG) == 0)
+        else if (strcmp((const char *) argv[i], ARG_VERSION) == 0 || strcmp((const char *) argv[i], ARG_VERSION_LONG) == 0)
         {
             auto o = new afrl::cmasi::AirVehicleState;
             auto p = new afrl::impact::AreaOfInterest;
