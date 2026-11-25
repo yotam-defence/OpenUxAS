@@ -150,7 +150,7 @@ because no binaries were available when written. Re-record with
   identically is unverified; the `impl` filters in `services` exist for
   divergences.
 * No service-specific comparators yet (milestones 3-6).
-* Not wired into the Makefile / CI (owned elsewhere).
+* Wired into the Makefile (`make diff-smoke`, part of `make test`) and the CI workflow.
 
 ## Known limitation: Ada reference not yet recorded
 
