@@ -81,7 +81,7 @@ jobs:
                   # version/help must exit 0 without starting the engine
                   uxas --version >/dev/null && uxas --help >/dev/null
                   # an unrecognized argument must fail
-                  ! uxas --bogus
+                  if uxas --bogus; then exit 1; fi
 
             - name: Run GoogleTest suite (GCC)
               run: |
