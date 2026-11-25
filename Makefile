@@ -47,7 +47,12 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+# Honor a compiler supplied via the environment (e.g. CI's clang++), default to g++
+ifeq ($(origin CXX),environment)
+    CXX:=$(ANODENV)$(CXX)
+else
+    CXX=$(ANODENV)g++
+endif
 
 # Default C++ compilation flags
 CXX_FLAGS:=-fPIC -std=c++17

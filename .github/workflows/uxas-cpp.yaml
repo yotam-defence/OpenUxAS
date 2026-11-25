@@ -56,6 +56,12 @@ jobs:
                   if [ ! -f /usr/lib/x86_64-linux-gnu/libgtest.a ]; then
                       (cd /usr/src/googletest && sudo cmake . && sudo make install)
                   fi
+                  # C++17 floor: Clang 14+
+                  if [ "${{ matrix.compiler }}" = clang ]; then
+                      ver=$(clang --version | sed -n 's/.*clang version \([0-9]*\).*/\1/p' | head -1)
+                      [ "$ver" -ge 14 ] || { echo "Clang 14+ required, found $ver"; exit 1; }
+                  fi
+                  $CXX --version
 
             - name: Set up java
               uses: actions/setup-java@v4
