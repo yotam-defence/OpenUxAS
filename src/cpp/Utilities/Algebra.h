@@ -12,6 +12,8 @@
 #ifndef ALGEBRA_H
 #define ALGEBRA_H
 
+
+#include <cstdint>
 namespace uxas
 {
 namespace common

@@ -6,6 +6,9 @@ import os
 
 
 class Uxas(spec('common')):
+    # Toolchain note: the C++ sources and dependencies are built as C++17
+    # (-std=c++17). This requires a C++17-capable compiler, e.g. gcc >= 11
+    # (or clang >= 14).
 
     @property
     def build_deps(self):

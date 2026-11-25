@@ -12,6 +12,8 @@
 
 
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 
 namespace uxas

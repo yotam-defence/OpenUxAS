@@ -17,6 +17,8 @@
 #ifndef UXAS_00_TASK_TEMPLATE_H
 #define UXAS_00_TASK_TEMPLATE_H
 
+
+#include <cstdint>
 #include "TaskServiceBase.h"
 
 namespace uxas

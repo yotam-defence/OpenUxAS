@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_TRANSPORT_ZERO_MQ_RECEIVER_BASE_H
 #define UXAS_MESSAGE_TRANSPORT_ZERO_MQ_RECEIVER_BASE_H
 
+
+#include <cstdint>
 #include "TransportReceiverBase.h"
 
 #include "ZeroMqSocketConfiguration.h"

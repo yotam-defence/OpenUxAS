@@ -47,18 +47,22 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+# Honor a compiler supplied via the environment (e.g. CI's clang++), default to g++
+ifeq ($(origin CXX),environment)
+    CXX:=$(ANODENV)$(CXX)
+else
+    CXX=$(ANODENV)g++
+endif
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
 CXX_FLAGS+=-DBOOST_ALLOW_DEPRECATED_HEADERS
 
-# Note: also suppress the warning about geometry needing C++14. This means we
-#       need to change language versions if we update boost or we don't update
-#       boost
+# Note: also suppress the warning about geometry needing C++14. Harmless now
+#       that we build as C++17 but kept for older boost versions.
 CXX_FLAGS+=-DBOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING
 
 # Enable all warnings
@@ -73,11 +77,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -135,6 +139,7 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
+	@echo "   test:  Build and run the C++ unit tests (tests/cpp/unit/*.cpp, needs gtest)"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -148,11 +153,47 @@ clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	rm -f $(OBJECT_DIR)/unit_tests
 	@echo "[Remove makefile fragments (dependencies)]"
 	rm -f $(DEPS)
 
 all: $(OBJECT_DIR)/uxas
 	@echo "[Project compiled]"
+
+# Unit tests (googletest). Every tests/cpp/unit/*.cpp is built into a single
+# $(OBJECT_DIR)/unit_tests executable, which is then run.
+UNIT_TEST_DIR:=tests/cpp/unit
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+
+$(OBJECT_DIR)/unit_tests: $(UNIT_TEST_SOURCES)
+	@mkdir -p $(OBJECT_DIR)
+	@echo "[Build unit tests]"
+	@$(CXX) $(CXX_FLAGS) $(INCLUDES) -o $@ $^ \
+	    -lgtest -lgtest_main -llmcp -lpthread
+
+# Smoke differential run (Ada reference vs C++, or C++ vs recorded golden).
+# Skipped with a notice when uxas is not built or neither the Ada reference
+# binary nor a recorded golden is available; a mismatch fails the target.
+DIFFTEST_PYTHON:=$(if $(wildcard .vpython/bin/python),.vpython/bin/python,python3)
+DIFFTEST_SMOKE:=tests/cpp/difftest/scenarios/smoke.json
+
+test-difftest:
+	@if test ! -x $(OBJECT_DIR)/uxas; then \
+	    echo "[Skip smoke differential run: $(OBJECT_DIR)/uxas not built]"; \
+	elif test -x src/ada/uxas-ada -o -n "$$UXAS_ADA_BIN" -o -f tests/cpp/difftest/goldens/smoke.json; then \
+	    echo "[Run smoke differential run]"; \
+	    UXAS_BIN=$(abspath $(OBJECT_DIR)/uxas) PYTHONPATH=tests/cpp \
+	        $(DIFFTEST_PYTHON) -m difftest $(DIFFTEST_SMOKE); \
+	else \
+	    echo "[Skip smoke differential run: no uxas_ada binary and no recorded golden]"; \
+	fi
+
+test: $(OBJECT_DIR)/unit_tests
+	@echo "[Run unit tests]"
+	@$(OBJECT_DIR)/unit_tests
+	@$(MAKE) --no-print-directory test-difftest
+
+.PHONY: all clean help test test-difftest
 
 # Main compilation and link
 $(OBJECT_DIR)/uxas.o: $(SOURCE_DIR)/UxAS_Main.cpp

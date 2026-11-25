@@ -17,6 +17,8 @@
 #ifndef UXAS_RENDEZVOUS_TASK_H
 #define UXAS_RENDEZVOUS_TASK_H
 
+
+#include <cstdint>
 #include "TaskServiceBase.h"
 
 #include "uxas/messages/task/TaskImplementationRequest.h"

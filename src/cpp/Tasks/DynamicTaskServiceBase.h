@@ -15,6 +15,8 @@
 #ifndef UXAS_TASK_DYNAMIC_TASK_SERVICE_BASE_H
 #define UXAS_TASK_DYNAMIC_TASK_SERVICE_BASE_H
 
+
+#include <cstdint>
 #include "TaskServiceBase.h"
 #include "ServiceBase.h"
 #include "TimeUtilities.h"

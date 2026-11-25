@@ -17,6 +17,8 @@
 #ifndef CALLBACKTIMER_H
 #define CALLBACKTIMER_H
 
+
+#include <cstdint>
 #include "TypeDefs/UxAS_TypeDefs_Thread.h"
 //#include "TypeDefs/UxAS_TypeDefs_ZeroMQ.h"
 

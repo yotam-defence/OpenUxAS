@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_STRING_UTIL_H
 #define UXAS_COMMON_STRING_UTIL_H
 
+
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <vector>

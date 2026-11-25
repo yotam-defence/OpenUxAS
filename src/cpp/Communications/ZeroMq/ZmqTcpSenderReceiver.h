@@ -10,6 +10,8 @@
 #ifndef COMMUNICATIONS_ZMQ_TCP_SENDER_RECEIVER_H
 #define COMMUNICATIONS_ZMQ_TCP_SENDER_RECEIVER_H
 
+
+#include <cstdint>
 #include "ZmqTcpSocket.h"
 #include "ZmqTcpSender.h"
 #include "ZmqTcpReceiver.h"

@@ -18,6 +18,8 @@
 #ifndef SENSORSTEERING_UTILITIES_H
 #define SENSORSTEERING_UTILITIES_H
 
+
+#include <cstdint>
 #include "Position.h"
 #include "FlatEarth.h"
 

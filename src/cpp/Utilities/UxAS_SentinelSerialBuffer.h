@@ -10,6 +10,7 @@
 #ifndef UXAS_COMMON_SENTINEL_SERIAL_BUFFER_H
 #define UXAS_COMMON_SENTINEL_SERIAL_BUFFER_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
 

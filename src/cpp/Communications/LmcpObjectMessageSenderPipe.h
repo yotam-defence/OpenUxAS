@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_LMCP_OBJECT_MESSAGE_SENDER_PIPE_H
 #define UXAS_MESSAGE_LMCP_OBJECT_MESSAGE_SENDER_PIPE_H
 
+
+#include <cstdint>
 #include "ZeroMqAddressedAttributedMessageSender.h"
 
 #include "avtas/lmcp/Object.h"

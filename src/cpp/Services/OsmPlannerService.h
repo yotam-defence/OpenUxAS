@@ -17,6 +17,8 @@
 #ifndef UXAS_SERVICE_OSM_PLANNER_SERVICE_H
 #define UXAS_SERVICE_OSM_PLANNER_SERVICE_H
 
+
+#include <cstdint>
 #include "Position.h"
 #include "Edge.h"
 #include "VisibilityGraph.h"

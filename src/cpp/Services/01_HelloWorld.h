@@ -18,6 +18,8 @@
 #define UXAS_HELLO_WORLD_H
 
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"

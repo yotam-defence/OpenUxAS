@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_LOG_LOGGER_BASE_H
 #define UXAS_COMMON_LOG_LOGGER_BASE_H
 
+
+#include <cstdint>
 #include "UxAS_LogSeverityLevel.h"
 #include "UxAS_Time.h"
 

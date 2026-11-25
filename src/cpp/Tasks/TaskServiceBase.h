@@ -17,6 +17,8 @@
 #ifndef UXAS_SERVICE_TASK_TASK_SERVICE_BASE_H
 #define UXAS_SERVICE_TASK_TASK_SERVICE_BASE_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "Constants/Convert.h"
 

@@ -1,0 +1,23 @@
+{
+  "name": "smoke",
+  "description": "Heartbeat-style KeyValuePair sequence. No AutomationRequest, no services: only exercises the bridge and the replay/capture path.",
+  "startup_settle_ms": 1500,
+  "shutdown_settle_ms": 200,
+  "config": {
+    "entity_id": 100,
+    "entity_type": "Aircraft",
+    "services": []
+  },
+  "normalise": {},
+  "comparators": [],
+  "steps": [
+    {"send": {"type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "start"}}},
+    {"expect_window": {"name": "after-start", "duration_ms": 500}},
+    {"send": {"type": "KeyValuePair", "repeat": 5, "interval_ms": 100,
+              "fields": {"Key": "heartbeat", "Value": "tick-${i}"}}},
+    {"delay_ms": 100},
+    {"expect_window": {"name": "after-ticks", "duration_ms": 500}},
+    {"send": {"type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "stop"}}},
+    {"expect_window": {"name": "after-stop", "duration_ms": 500}}
+  ]
+}

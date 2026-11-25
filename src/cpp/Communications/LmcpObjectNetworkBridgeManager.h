@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_LMCP_OBJECT_NETWORK_BRIDGE_MANAGER_H
 #define UXAS_MESSAGE_LMCP_OBJECT_NETWORK_BRIDGE_MANAGER_H
 
+
+#include <cstdint>
 #include "LmcpObjectNetworkClientBase.h"
 
 #include "LmcpObjectMessageReceiverPipe.h"

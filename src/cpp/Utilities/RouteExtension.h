@@ -1,6 +1,8 @@
 #ifndef RouteExtension_H
 #define RouteExtension_H
 
+
+#include <cstdint>
 #include "FlatEarth.h"
 
 #include "afrl/cmasi/Waypoint.h"

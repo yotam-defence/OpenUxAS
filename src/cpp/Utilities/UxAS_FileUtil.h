@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_FILE_UTIL_H
 #define UXAS_COMMON_FILE_UTIL_H
 
+
+#include <cstdint>
 #include "UxAS_Log.h"
 #include "UxAS_StringUtil.h"
 

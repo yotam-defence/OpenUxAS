@@ -32,6 +32,7 @@
 // apparently only diskreads the header file once. 
 #if _MSC_VER > 1000
 #pragma once
+#include <cstdint>
 #endif // end if 
 
 /****************************************************

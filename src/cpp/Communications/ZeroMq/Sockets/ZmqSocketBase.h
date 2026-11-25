@@ -10,6 +10,8 @@
 #ifndef COMMUNICATIONS_ZMQ_SOCKET_BASE_H
 #define COMMUNICATIONS_ZMQ_SOCKET_BASE_H
 
+
+#include <cstdint>
 #include "ISocket.h"
 #include "zmq.hpp"
 

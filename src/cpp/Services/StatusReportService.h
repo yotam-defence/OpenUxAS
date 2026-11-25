@@ -17,6 +17,8 @@
 #ifndef UXAS_STATUSREPORTSERVICE_H
 #define UXAS_STATUSREPORTSERVICE_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 

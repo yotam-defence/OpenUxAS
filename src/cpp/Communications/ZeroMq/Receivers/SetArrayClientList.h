@@ -10,6 +10,8 @@
 #ifndef COMMUNICATIONS_SET_ARRAY_CLIENT_H
 #define COMMUNICATIONS_SET_ARRAY_CLIENT_H
 
+
+#include <cstdint>
 #include "IClientList.h"
 
 #include "UxAS_Log.h"

@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_LOG_HEAD_LOG_DATA_DATABASE_LOGGER_H
 #define UXAS_COMMON_LOG_HEAD_LOG_DATA_DATABASE_LOGGER_H
 
+
+#include <cstdint>
 #include "UxAS_LoggerBase.h"
 #include "UxAS_DatabaseLoggerHelper.h"
 
