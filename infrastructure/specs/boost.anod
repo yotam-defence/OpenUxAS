@@ -49,7 +49,7 @@ class Boost(spec('common')):
             toolset = 'gcc'
         self.shell(os.path.join(self['SRC_DIR'], 'b2'),
                    'link=static',
-                   'toolset=%s' % toolset, 'cxxstd=11',
+                   'toolset=%s' % toolset, 'cxxstd=17',
                    'install', cwd=self['SRC_DIR'])
         sync_tree(os.path.join(self['INSTALL_DIR'], 'lib'),
                   os.path.join(self['INSTALL_DIR'], 'lib64'), delete=True)
