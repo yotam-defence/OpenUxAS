@@ -1,5 +1,4 @@
 import json, os, shutil, socket, subprocess, sys, tempfile
-import pytest
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 CPP = os.path.join(ROOT, "tests", "cpp")
