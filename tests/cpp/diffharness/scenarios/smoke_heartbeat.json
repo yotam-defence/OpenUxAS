@@ -1,0 +1,21 @@
+{
+  "name": "smoke_heartbeat",
+  "description": "Heartbeat-style KeyValuePair traffic echoed through the PublishPull bridge; no AutomationRequest. Exercises the harness plumbing end to end with no services configured.",
+  "entity_id": 100,
+  "entity_type": "Aircraft",
+  "run_duration_s": 60,
+  "bridge": {"pub": "tcp://127.0.0.1:5560", "pull": "tcp://127.0.0.1:5561"},
+  "services": [],
+  "capture": {
+    "subscribe": ["afrl.cmasi.KeyValuePair"],
+    "quiet_ms": 1000,
+    "max_wait_ms": 8000
+  },
+  "replay": [
+    {"delay_ms": 0,   "type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "1"}},
+    {"delay_ms": 250, "type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "2"}},
+    {"delay_ms": 250, "type": "KeyValuePair", "fields": {"Key": "heartbeat", "Value": "3"}},
+    {"delay_ms": 250, "type": "KeyValuePair", "fields": {"Key": "heartbeat.status", "Value": "ALIVE"}}
+  ],
+  "comparator": {"name": "canonical", "options": {"normalise": {"window_ms": 0}}}
+}

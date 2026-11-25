@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Ada-vs-C++ differential replay harness launcher (see diffharness/README.md)
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PYTHONPATH="${SCRIPT_DIR}${PYTHONPATH:+:${PYTHONPATH}}"
+exec python3 -m diffharness "$@"

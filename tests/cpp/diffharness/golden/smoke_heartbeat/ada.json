@@ -1,0 +1,64 @@
+{
+  "format": 1,
+  "impl": "ada",
+  "provenance": "synthetic: hand-authored from expected bridge echo; re-record with --update-golden against real binaries",
+  "records": [
+    {
+      "address": "afrl.cmasi.KeyValuePair",
+      "content_type": "lmcp",
+      "descriptor": "afrl.cmasi.KeyValuePair",
+      "obj": {
+        "$type": "afrl.cmasi.KeyValuePair",
+        "Key": "heartbeat",
+        "Value": "1"
+      },
+      "source_entity_id": 100,
+      "source_group": "",
+      "source_service_id": 0,
+      "t_ms": 10
+    },
+    {
+      "address": "afrl.cmasi.KeyValuePair",
+      "content_type": "lmcp",
+      "descriptor": "afrl.cmasi.KeyValuePair",
+      "obj": {
+        "$type": "afrl.cmasi.KeyValuePair",
+        "Key": "heartbeat",
+        "Value": "2"
+      },
+      "source_entity_id": 100,
+      "source_group": "",
+      "source_service_id": 0,
+      "t_ms": 260
+    },
+    {
+      "address": "afrl.cmasi.KeyValuePair",
+      "content_type": "lmcp",
+      "descriptor": "afrl.cmasi.KeyValuePair",
+      "obj": {
+        "$type": "afrl.cmasi.KeyValuePair",
+        "Key": "heartbeat",
+        "Value": "3"
+      },
+      "source_entity_id": 100,
+      "source_group": "",
+      "source_service_id": 0,
+      "t_ms": 510
+    },
+    {
+      "address": "afrl.cmasi.KeyValuePair",
+      "content_type": "lmcp",
+      "descriptor": "afrl.cmasi.KeyValuePair",
+      "obj": {
+        "$type": "afrl.cmasi.KeyValuePair",
+        "Key": "heartbeat.status",
+        "Value": "ALIVE"
+      },
+      "source_entity_id": 100,
+      "source_group": "",
+      "source_service_id": 0,
+      "t_ms": 760
+    }
+  ],
+  "scenario": "smoke_heartbeat"
+}
