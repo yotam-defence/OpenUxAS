@@ -1,0 +1,35 @@
+name: Set up UxAS C++ toolchain
+description: Python, Java, apt/pip dependencies and the anod infrastructure
+inputs:
+    python-version:
+        description: Python version to install
+        required: true
+    apt-packages:
+        description: Space-separated apt packages to install
+        required: true
+runs:
+    using: composite
+    steps:
+        - name: Set up python ${{ inputs.python-version }}
+          uses: actions/setup-python@v5
+          with:
+              python-version: ${{ inputs.python-version }}
+
+        - name: Set up java
+          uses: actions/setup-java@v4
+          with:
+              java-version: '11'
+              distribution: 'adopt'
+
+        - name: Install dependencies
+          shell: bash
+          run: |
+              sudo apt-get update
+              sudo apt-get install -y ${{ inputs.apt-packages }}
+              python3 -m pip install --user pyzmq e3-core pytest
+
+        - name: Install infrastructure
+          shell: bash
+          run: |
+              cd OpenUxAS
+              infrastructure/install -vv --no-gnat --no-java -y
