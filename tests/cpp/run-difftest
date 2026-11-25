@@ -1,0 +1,26 @@
+#! /usr/bin/env bash
+#
+# Wrapper for the Ada-vs-C++ differential replay harness (tests/cpp/difftest).
+# Usage: run-difftest [difftest options] [scenario ...]
+# See tests/cpp/difftest/README.md.
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+OPENUXAS_ROOT="$( cd "${SCRIPT_DIR}/../.." && pwd )"
+
+# Load global paths (UXAS_BIN, UXAS_ADA_BIN, ...) and the venv helpers when the
+# infrastructure is present; otherwise fall back to the repository defaults.
+if [ -f "${OPENUXAS_ROOT}/infrastructure/paths.sh" ]; then
+    source "${OPENUXAS_ROOT}/infrastructure/paths.sh"
+    if declare -F activate_venv >/dev/null && [ -f "${VPYTHON_ACTIVATE}" ]; then
+        activate_venv
+    fi
+fi
+
+: "${UXAS_BIN:=${OPENUXAS_ROOT}/obj/cpp/uxas}"
+: "${UXAS_ADA_BIN:=${OPENUXAS_ROOT}/src/ada/uxas-ada}"
+export UXAS_BIN UXAS_ADA_BIN
+
+# Both the harness package (difftest) and pylmcp live next to this script.
+export PYTHONPATH="${SCRIPT_DIR}${PYTHONPATH:+:${PYTHONPATH}}"
+
+exec python3 -m difftest "$@"
