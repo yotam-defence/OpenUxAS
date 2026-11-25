@@ -1,7 +1,7 @@
 {
   "format": 1,
   "impl": "ada",
-  "provenance": "synthetic: hand-authored from expected bridge echo; re-record with --update-golden against real binaries",
+  "provenance": "recorded: Ada uxas_ada (sha256 b1610210d2e79742, built with GNAT FSF 14.2.0 + gnatprove 14.1.0 SPARKlib (Aggregate aspect dropped in private copy), via lifecycle script ada-reference) as client of C++ uxas hub (sha256 7416fe13f2fac8d9); recorded 2026-11-25T14:04:10Z on Linux x86_64 by diffharness --update-golden, scenario smoke_heartbeat",
   "records": [
     {
       "address": "afrl.cmasi.KeyValuePair",
@@ -15,7 +15,7 @@
       "source_entity_id": 100,
       "source_group": "",
       "source_service_id": 0,
-      "t_ms": 10
+      "t_ms": 1
     },
     {
       "address": "afrl.cmasi.KeyValuePair",
@@ -29,7 +29,7 @@
       "source_entity_id": 100,
       "source_group": "",
       "source_service_id": 0,
-      "t_ms": 260
+      "t_ms": 251
     },
     {
       "address": "afrl.cmasi.KeyValuePair",
@@ -43,7 +43,7 @@
       "source_entity_id": 100,
       "source_group": "",
       "source_service_id": 0,
-      "t_ms": 510
+      "t_ms": 501
     },
     {
       "address": "afrl.cmasi.KeyValuePair",
@@ -57,7 +57,7 @@
       "source_entity_id": 100,
       "source_group": "",
       "source_service_id": 0,
-      "t_ms": 760
+      "t_ms": 751
     }
   ],
   "scenario": "smoke_heartbeat"

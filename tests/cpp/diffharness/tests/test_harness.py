@@ -194,8 +194,12 @@ def test_config_per_impl_filter_and_bridge():
     cpp = build_config(sc, "cpp").decode()
     ada = build_config(sc, "ada").decode()
     assert "OnlyAda" not in cpp and 'Flag="TRUE"' in ada
-    for x in (cpp, ada):
-        assert 'Type="Common"' in x
+    hub = build_config(sc, "ada", role="hub").decode()
+    # uxas_ada is only a client of the C++ hub: shared services live in the
+    # hub, Ada-only services in the uxas_ada config.
+    assert 'Type="Common"' in cpp and 'Type="Common"' in hub
+    assert 'Type="Common"' not in ada and "OnlyAda" not in hub
+    for x in (cpp, ada, hub):
         assert "LmcpObjectNetworkPublishPullBridge" in x
         assert 'MessageType="afrl.cmasi.KeyValuePair"' in x
     with pytest.raises(ValueError):

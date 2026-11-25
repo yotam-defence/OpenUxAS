@@ -44,6 +44,9 @@ def build_parser() -> argparse.ArgumentParser:
                         "replaying (default: %(default)s)")
     p.add_argument("--plugin", action="append", default=[],
                    help="python module registering comparators (repeatable)")
+    p.add_argument("--ada-build-note", default=None,
+                   help="free text recorded in the Ada golden provenance "
+                        "(toolchain used to build --ada-bin)")
     p.add_argument("--list-comparators", action="store_true")
     p.add_argument("--dry-run", action="store_true",
                    help="validate the scenario and print the generated "
@@ -105,12 +108,16 @@ def main(argv: Optional[List[str]] = None, out=None, err=None) -> int:
             ref_label = "ada(golden)"
         else:
             ada = run_implementation(sc, "ada", args.ada_bin,
-                                     settle_delay=args.settle_delay, log=log)
+                                     settle_delay=args.settle_delay,
+                                     hub_binary=args.cpp_bin, log=log)
             ref_label = "ada"
 
         if args.update_golden:
-            save_golden(args.golden_dir, sc.name, "cpp", cpp)
-            p = save_golden(args.golden_dir, sc.name, "ada", ada)
+            prov = describe_provenance(sc, args)
+            save_golden(args.golden_dir, sc.name, "cpp", cpp,
+                        provenance=prov["cpp"])
+            p = save_golden(args.golden_dir, sc.name, "ada", ada,
+                            provenance=prov["ada"])
             err.write("golden files updated under %s\n" % os.path.dirname(p))
 
         return report(sc, ada, cpp, ref_label, out, args.context)
@@ -124,6 +131,45 @@ def main(argv: Optional[List[str]] = None, out=None, err=None) -> int:
             err.write("error: %s\n" % e)
             return EXIT_ERROR
         raise
+
+
+def _first_line(cmd: List[str]) -> str:
+    import subprocess
+    try:
+        r = subprocess.run(cmd, stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, timeout=10)
+        lines = r.stdout.decode("utf-8", "replace").splitlines()
+        return lines[0].strip() if lines else "unknown"
+    except (OSError, subprocess.SubprocessError):
+        return "unknown"
+
+
+def describe_provenance(sc, args) -> dict:
+    """Provenance strings stored in recorded goldens."""
+    import datetime
+    import hashlib
+    import platform
+
+    def sha(path):
+        try:
+            with open(path, "rb") as fd:
+                return hashlib.sha256(fd.read()).hexdigest()[:16]
+        except OSError:
+            return "unknown"
+
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+    host = "%s %s" % (platform.system(), platform.machine())
+    common = ("recorded %s on %s by diffharness --update-golden, "
+              "scenario %s" % (stamp, host, sc.name))
+    return {
+        "cpp": "recorded: C++ uxas (sha256 %s); %s"
+               % (sha(args.cpp_bin), common),
+        "ada": "recorded: Ada uxas_ada (sha256 %s, built with %s) as client "
+               "of C++ uxas hub (sha256 %s); %s"
+               % (sha(args.ada_bin), args.ada_build_note
+                  or _first_line(["gnat", "--version"]),
+                  sha(args.cpp_bin), common)}
 
 
 def report(sc, ada, cpp, ref_label: str, out, context: int = 3) -> int:

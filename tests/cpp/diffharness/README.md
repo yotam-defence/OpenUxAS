@@ -118,10 +118,8 @@ comparators and diffs them in separate sections.
 
 `golden/<scenario>/<impl>.json` hold decoded but un-normalised records
 (`format`, `provenance`, `records`), so normaliser changes need no
-re-recording. **The committed `smoke_heartbeat` goldens are synthetic**
-(`provenance: synthetic`): hand-authored from the expected bridge echo
-because no binaries were available when written. Re-record with
-`--update-golden` on a machine with both binaries and review the diff.
+re-recording. The committed `smoke_heartbeat` goldens are recorded from real binaries
+(see below).
 
 ## Flakiness mitigation
 
@@ -143,22 +141,33 @@ because no binaries were available when written. Re-record with
 
 ## Not covered / known gaps
 
-* Live runs were not exercised (no binaries/pyzmq/e3 in the authoring
-  environment); `runner.py` and the pylmcp encode/decode path are untested
-  end to end.
-* Whether `uxas_ada` accepts `-cfgPath` and the PublishPull bridge config
-  identically is unverified; the `impl` filters in `services` exist for
-  divergences.
+* Live smoke runs against both binaries have been exercised; no scenario with
+  Ada-hosted services has been run yet.
 * No service-specific comparators yet (milestones 3-6).
 * Wired into the Makefile (`make diff-smoke`, part of `make test`) and the CI workflow.
 
-## Known limitation: Ada reference not yet recorded
+## Ada reference goldens and their limits
 
-The Ada GNAT/Alire toolchain is not available in the sandbox, so
-`golden/smoke_heartbeat/ada.json` is synthetic and the default smoke gate
-(`make diff-smoke`, `--reference golden`) checks the C++ `uxas` output against
-that expected bridge echo only. To make it a true Ada-vs-C++ gate, build
-`uxas_ada` (`./anod build uxas-ada`) and run
-`tests/cpp/run-diff --cpp-bin obj/cpp/uxas --ada-bin <uxas_ada> --scenario smoke_heartbeat --update-golden`,
-then review and commit the recorded goldens. Use `make diff-smoke ADA_BIN=<path>`
-for a live comparison.
+`golden/smoke_heartbeat/{ada,cpp}.json` are **recorded** from real binaries
+(see each file's `provenance`: binary hashes, toolchain, date). The Ada
+reference is `uxas_ada` built with GNAT FSF 14.2.0 and the gnatprove 14.1
+SPARKlib (lifecycle script `ada-reference`, output
+`$WORKSPACE_DIR/.ada-build/uxas-ada`; `./anod build uxas-ada` is the
+upstream route). The distro GNAT 14.3 with gnatprove 13.2 does not compile the
+sources (`unconstrained subtype in component declaration`: 13.x formal maps are
+discriminated); the build also drops SPARKlib's `Aggregate` aspect on formal
+vectors/lists in a private copy because GNAT 14.2 rejects it.
+
+`uxas_ada` is not a standalone node: it only hosts Ada services and connects
+as a client to the bridge of a C++ `uxas`, and exits at once if it has no
+services. An Ada run therefore starts the C++ `uxas` as hub (config role
+`hub`: bridge plus services without an `impl` filter) and then `uxas_ada`
+(services with `impl: "ada"` plus the same bridge addresses). Pass `--cpp-bin`
+for both.
+
+Limitation: `smoke_heartbeat` configures no services, so the Ada process
+contributes nothing and the Ada golden equals the bridge echo; it proves the
+toolchain/plumbing, not Ada service behaviour. Service scenarios (milestones
+3-6) need `impl: "ada"` services to exercise Ada. Re-record with
+`run-diff ... --update-golden [--ada-build-note TEXT]`; use
+`make diff-smoke ADA_BIN=<path>` for a live comparison.

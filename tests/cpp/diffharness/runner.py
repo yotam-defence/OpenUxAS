@@ -62,12 +62,20 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
                        settle_delay: float = 2.0,
                        extra_args: Optional[List[str]] = None,
                        workdir: Optional[str] = None,
+                       hub_binary: Optional[str] = None,
                        log=None) -> List[Dict[str, Any]]:
-    """Launch ``binary``, replay the scenario, return decoded records."""
+    """Launch ``binary``, replay the scenario, return decoded records.
+
+    For ``impl == "ada"`` the Ada binary is only a client of the bridge, so
+    ``hub_binary`` (the C++ ``uxas``) is launched first as the hub with the
+    "hub" config and ``binary`` (``uxas_ada``) is launched after it.
+    """
     zmq = _zmq()
-    if not os.path.isfile(binary) or not os.access(binary, os.X_OK):
-        raise RunError("%s binary not found or not executable: %s"
-                       % (impl, binary))
+    bins = [binary] + ([hub_binary] if impl == "ada" else [])
+    for b in bins:
+        if not b or not os.path.isfile(b) or not os.access(b, os.X_OK):
+            raise RunError("%s binary not found or not executable: %s"
+                           % (impl, b))
 
     # Pre-encode every step so encoding errors surface before launching.
     wire = [codec.encode_step(s, scenario.entity_id)
@@ -79,10 +87,24 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
         with open(cfg, "wb") as fd:
             fd.write(build_config(scenario, impl))
         out = open(os.path.join(tmp, "stdout.log"), "wb")
-        proc = subprocess.Popen(
-            [os.path.abspath(binary), "-cfgPath", cfg] + list(extra_args or []),
-            stdout=out, stderr=subprocess.STDOUT,
-            cwd=workdir or tmp)
+        worker = None
+        if impl == "ada":
+            hub_cfg = os.path.join(tmp, "cfg_hub.xml")
+            with open(hub_cfg, "wb") as fd:
+                fd.write(build_config(scenario, "ada", role="hub"))
+            # The hub is the process that is watched (proc); uxas_ada is a
+            # client which may legitimately exit early when it has no
+            # services to host.
+            proc = subprocess.Popen(
+                [os.path.abspath(hub_binary), "-cfgPath", hub_cfg],
+                stdout=out, stderr=subprocess.STDOUT,
+                cwd=workdir or tmp)
+        else:
+            proc = subprocess.Popen(
+                [os.path.abspath(binary), "-cfgPath", cfg]
+                + list(extra_args or []),
+                stdout=out, stderr=subprocess.STDOUT,
+                cwd=workdir or tmp)
         ctx = zmq.Context()
         sub = ctx.socket(zmq.SUB)
         push = ctx.socket(zmq.PUSH)
@@ -95,6 +117,15 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
             poller = zmq.Poller()
             poller.register(sub, zmq.POLLIN)
 
+            if impl == "ada":
+                # Give the hub time to bind before the Ada client connects.
+                _drain(poller, sub, time.monotonic() + min(settle_delay, 1.0),
+                       None, proc, 0.0)
+                worker = subprocess.Popen(
+                    [os.path.abspath(binary), "-cfgPath", cfg]
+                    + list(extra_args or []),
+                    stdout=out, stderr=subprocess.STDOUT,
+                    cwd=workdir or tmp)
             # Settle: let the binary bind its sockets and services start.
             # Messages received here are discarded (startup chatter).
             _drain(poller, sub, time.monotonic() + settle_delay, None,
@@ -124,6 +155,8 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
             sub.close()
             push.close()
             ctx.term()
+            if worker is not None:
+                stop_process(worker)
             stop_process(proc)
             out.close()
             if log:
