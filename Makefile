@@ -74,7 +74,7 @@ ifeq ($(ENABLE_COVERAGE),true)
 endif
 # boost_system is header-only stub since 1.69 and the library was removed in 1.89;
 # link it only when present.
-BOOST_SYSTEM_LIB=$(shell echo "int main(){}" | $(CXX_BIN) -x c++ - -lboost_system -o /dev/null 2>/dev/null && echo -lboost_system)
+BOOST_SYSTEM_LIB=$(shell echo "int main(){}" | $(CXX) -x c++ - -lboost_system -o /dev/null 2>/dev/null && echo -lboost_system)
 
 
 # Linker flags
