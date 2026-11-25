@@ -13,8 +13,8 @@ from difftest.golden import GoldenError, read_golden, write_golden
 from difftest.model import Scenario
 from difftest.normalise import (NormaliserConfig, assign_windows,
                                 normalise_capture)
-from difftest.procs import (InfraError, ManagedProcess, command_line,
-                            find_binary, find_free_ports)
+from difftest.procs import (ENV_VARS, InfraError, ManagedProcess,
+                            command_line, find_binary, find_free_ports)
 from difftest.replay import ZmqTransport, execute_steps
 
 MODES = ("auto", "live", "record-golden", "golden")
@@ -190,8 +190,7 @@ def run_scenario(scenario: Scenario, options: Options,
         def cap(impl, binary):
             if not binary:
                 raise InfraError("%s binary not found (use --%s-bin or %s)" %
-                                 (impl, impl, "UXAS_ADA_BIN" if impl == ADA
-                                  else "UXAS_BIN"))
+                                 (impl, impl, ENV_VARS[impl]))
             raw = backend.capture(impl, scenario, binary, workdir,
                                   options.time_scale,
                                   options.startup_settle_ms)
@@ -207,20 +206,21 @@ def run_scenario(scenario: Scenario, options: Options,
                 "binary plus a golden (%s). Found: ada=%s cpp=%s golden=%s" %
                 (golden_path(scenario, options.golden_dir), ada, cpp,
                  gexists))
-        if mode == "record-golden":
-            expected = cap(ADA, ada)
-            res.diffs = _bounds_check(scenario, ADA, expected)
+        def record(expected):
             res.golden_path = write_golden(scenario, cfg, expected,
                                            options.golden_dir)
             res.notes.append("golden written: %s" % res.golden_path)
+
+        if mode == "record-golden":
+            expected = cap(ADA, ada)
+            res.diffs = _bounds_check(scenario, ADA, expected)
+            record(expected)
             res.counts = {n: {ADA: len(m)} for n, m in expected.items()}
         else:
             if mode == "live":
                 expected = cap(ADA, ada)
                 if options.record_golden:
-                    res.golden_path = write_golden(scenario, cfg, expected,
-                                                   options.golden_dir)
-                    res.notes.append("golden written: %s" % res.golden_path)
+                    record(expected)
                 exp_side = ADA
             else:  # golden
                 try:
