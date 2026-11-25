@@ -166,11 +166,29 @@ $(OBJECT_DIR)/unit_tests: $(UNIT_TEST_SOURCES)
 	@$(CXX) $(CXX_FLAGS) $(INCLUDES) -o $@ $^ \
 	    -lgtest -lgtest_main -llmcp -lpthread
 
+# Smoke differential run (Ada reference vs C++, or C++ vs recorded golden).
+# Skipped with a notice when uxas is not built or neither the Ada reference
+# binary nor a recorded golden is available; a mismatch fails the target.
+DIFFTEST_PYTHON:=$(if $(wildcard .vpython/bin/python),.vpython/bin/python,python3)
+DIFFTEST_SMOKE:=tests/cpp/difftest/scenarios/smoke.json
+
+test-difftest:
+	@if test ! -x $(OBJECT_DIR)/uxas; then \
+	    echo "[Skip smoke differential run: $(OBJECT_DIR)/uxas not built]"; \
+	elif test -x src/ada/uxas-ada -o -n "$$UXAS_ADA_BIN" -o -f tests/cpp/difftest/goldens/smoke.json; then \
+	    echo "[Run smoke differential run]"; \
+	    UXAS_BIN=$(abspath $(OBJECT_DIR)/uxas) PYTHONPATH=tests/cpp \
+	        $(DIFFTEST_PYTHON) -m difftest $(DIFFTEST_SMOKE); \
+	else \
+	    echo "[Skip smoke differential run: no uxas_ada binary and no recorded golden]"; \
+	fi
+
 test: $(OBJECT_DIR)/unit_tests
 	@echo "[Run unit tests]"
 	@$(OBJECT_DIR)/unit_tests
+	@$(MAKE) --no-print-directory test-difftest
 
-.PHONY: all clean help test
+.PHONY: all clean help test test-difftest
 
 # Main compilation and link
 $(OBJECT_DIR)/uxas.o: $(SOURCE_DIR)/UxAS_Main.cpp
