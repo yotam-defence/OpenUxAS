@@ -45,3 +45,17 @@ def test_golden_record_then_compare_and_mismatch():
 def test_missing_scenario_error():
     r = difftest("--mode", "live", "--cpp-bin", BIN, "/nonexistent.json")
     assert r.returncode == 2
+
+
+def test_uxas_help_flags():
+    for flag in ("-help", "--help"):
+        r = subprocess.run([BIN, flag], capture_output=True, text=True, timeout=30)
+        assert r.returncode == 0, flag + ": " + r.stdout + r.stderr
+        assert "Usage:" in r.stdout, flag
+        assert "-cfgPath" in r.stdout and "-runUntil" in r.stdout, flag
+
+
+def test_uxas_version_flags():
+    for flag in ("-version", "--version"):
+        r = subprocess.run([BIN, flag], capture_output=True, text=True, timeout=30)
+        assert "VERSION:" in r.stdout and "CMASI:" in r.stdout and "IMPACT:" in r.stdout, flag
