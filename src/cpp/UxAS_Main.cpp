@@ -30,6 +30,7 @@
 #endif
 
 #include <iostream>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <thread>
