@@ -10,6 +10,8 @@
 #ifndef COMMUNICATIONS_ZMQ_SOCKET_INITIALIZER_H
 #define COMMUNICATIONS_ZMQ_SOCKET_INITIALIZER_H
 
+
+#include <cstdint>
 #include "ISocket.h"
 #include "UxAS_Log.h"
 

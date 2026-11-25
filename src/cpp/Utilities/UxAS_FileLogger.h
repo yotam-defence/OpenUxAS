@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_LOG_FILE_LOGGER_H
 #define UXAS_COMMON_LOG_FILE_LOGGER_H
 
+
+#include <cstdint>
 #include "UxAS_LoggerBase.h"
 
 #include <fstream>

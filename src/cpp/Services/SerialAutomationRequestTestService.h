@@ -19,6 +19,8 @@
 #ifndef UXAS_SERVICE_TEST_SERIAL_AUTOMATION_REQUEST_TEST_SERVICE_H
 #define UXAS_SERVICE_TEST_SERIAL_AUTOMATION_REQUEST_TEST_SERVICE_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "afrl/cmasi/CMASI.h"

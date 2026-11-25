@@ -10,6 +10,8 @@
 #ifndef UXAS_ZMQ_TCP_SENDER_H
 #define UXAS_ZMQ_TCP_SENDER_H
 
+
+#include <cstdint>
 #include "IClientList.h"
 #include "ZmqSender.h"
 #include "ZmqTcpSocket.h"

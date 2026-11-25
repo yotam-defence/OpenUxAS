@@ -10,6 +10,8 @@
 #ifndef UXAS_SERVICE_SERVICE_MANAGER_H
 #define UXAS_SERVICE_SERVICE_MANAGER_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 
 #include "LmcpObjectMessageReceiverPipe.h"

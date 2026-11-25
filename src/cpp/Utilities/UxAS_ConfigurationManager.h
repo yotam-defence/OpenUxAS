@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_CONFIGURATION_MANAGER_H
 #define UXAS_COMMON_CONFIGURATION_MANAGER_H
 
+
+#include <cstdint>
 #include "pugixml.hpp"
 
 #include <memory>

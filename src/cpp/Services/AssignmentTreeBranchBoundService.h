@@ -19,6 +19,8 @@
 #ifndef UXAS_SERVICE_ASSIGNMENT_TREE_BRANCH_BOUND_SERVICE_H
 #define UXAS_SERVICE_ASSIGNMENT_TREE_BRANCH_BOUND_SERVICE_H
 
+
+#include <cstdint>
 #include "AssignmentTreeBranchBoundBase.h"
 
 namespace uxas

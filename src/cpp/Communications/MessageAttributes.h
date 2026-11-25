@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_DATA_MESSAGE_ATTRIBUTES_H
 #define UXAS_MESSAGE_DATA_MESSAGE_ATTRIBUTES_H
 
+
+#include <cstdint>
 #include "AddressedMessage.h"
 
 #include <string>

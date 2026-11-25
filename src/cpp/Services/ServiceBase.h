@@ -10,6 +10,8 @@
 #ifndef UXAS_SERVICE_SERVICE_BASE_H
 #define UXAS_SERVICE_SERVICE_BASE_H
 
+
+#include <cstdint>
 #include "LmcpObjectNetworkClientBase.h"
 
 #include "UxAS_Log.h"

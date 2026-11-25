@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_LMCP_OBJECT_NETWORK_SERVER_H
 #define UXAS_MESSAGE_LMCP_OBJECT_NETWORK_SERVER_H
 
+
+#include <cstdint>
 #include "AddressedAttributedMessage.h"
 #include "LmcpObjectMessageReceiverPipe.h"
 #include "LmcpObjectMessageSenderPipe.h"

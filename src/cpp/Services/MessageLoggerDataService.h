@@ -12,6 +12,8 @@
 
 
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 
 #include "UxAS_DatabaseLogger.h"

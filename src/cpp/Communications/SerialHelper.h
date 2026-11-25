@@ -10,6 +10,8 @@
 #ifndef UXAS_MESSAGE_DATA_SERIAL_HELPER_H
 #define UXAS_MESSAGE_DATA_SERIAL_HELPER_H
 
+
+#include <cstdint>
 #include "stdUniquePtr.h"
 
 #include "afrl/cmasi/KeyValuePair.h"

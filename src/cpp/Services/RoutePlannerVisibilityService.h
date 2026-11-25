@@ -19,6 +19,8 @@
 #define UXAS_SERVICE_ROUTE_PLANNER_VISIBILITY_SERVICE_H
 
 
+
+#include <cstdint>
 #include "VisibilityGraph.h"
 
 #include "uxas/messages/route/RouteRequest.h"

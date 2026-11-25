@@ -10,6 +10,8 @@
 #ifndef UXAS_COMMON_LOG_DATABASE_LOGGER_HELPER_H
 #define UXAS_COMMON_LOG_DATABASE_LOGGER_HELPER_H
 
+
+#include <cstdint>
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 

@@ -19,6 +19,8 @@
 
 
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 #include "TypeDefs/UxAS_TypeDefs_Timer.h"

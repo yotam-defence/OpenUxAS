@@ -10,6 +10,8 @@
 #ifndef UXAS_STEERING_SERVICE_H
 #define UXAS_STEERING_SERVICE_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "Constants/Constant_Strings.h"
 #include "visilibity.h"

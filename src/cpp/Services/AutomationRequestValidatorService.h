@@ -18,6 +18,8 @@
 #ifndef UXAS_SERVICE_AUTOMATION_REQUEST_VALIDATOR_SERVICE_H
 #define UXAS_SERVICE_AUTOMATION_REQUEST_VALIDATOR_SERVICE_H
 
+
+#include <cstdint>
 #include "ServiceBase.h"
 #include "CallbackTimer.h"
 

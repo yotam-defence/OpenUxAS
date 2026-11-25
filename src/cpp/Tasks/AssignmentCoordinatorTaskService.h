@@ -17,6 +17,8 @@
 #ifndef UXAS_ASSIGNMENT_COORDINATOR_TASK_SERVICE_H
 #define UXAS_ASSIGNMENT_COORDINATOR_TASK_SERVICE_H
 
+
+#include <cstdint>
 #include "CallbackTimer.h"
 #include "TaskServiceBase.h"
 
