@@ -10,7 +10,7 @@ downstream of this module works on *plain records*: JSON-serialisable dicts
 so the normaliser, comparators and diff are testable without pylmcp.
 """
 import base64
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from diffharness.scenario import ReplayStep
 
