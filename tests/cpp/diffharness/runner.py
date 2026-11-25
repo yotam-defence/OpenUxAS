@@ -58,6 +58,17 @@ def stop_process(proc: subprocess.Popen, grace_s: float = 5.0) -> None:
         proc.wait()
 
 
+def _spawn(binary, cfg, out, cwd, extra_args=None):
+    return subprocess.Popen(
+        [os.path.abspath(binary), "-cfgPath", cfg] + list(extra_args or []),
+        stdout=out, stderr=subprocess.STDOUT, cwd=cwd)
+
+
+def _write_cfg(path, scenario, impl, **kw):
+    with open(path, "wb") as fd:
+        fd.write(build_config(scenario, impl, **kw))
+
+
 def run_implementation(scenario: Scenario, impl: str, binary: str,
                        settle_delay: float = 2.0,
                        extra_args: Optional[List[str]] = None,
@@ -84,27 +95,18 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
     records: List[Dict[str, Any]] = []
     with tempfile.TemporaryDirectory(prefix="diffharness-%s-" % impl) as tmp:
         cfg = os.path.join(tmp, "cfg_%s.xml" % impl)
-        with open(cfg, "wb") as fd:
-            fd.write(build_config(scenario, impl))
+        _write_cfg(cfg, scenario, impl)
         out = open(os.path.join(tmp, "stdout.log"), "wb")
         worker = None
         if impl == "ada":
             hub_cfg = os.path.join(tmp, "cfg_hub.xml")
-            with open(hub_cfg, "wb") as fd:
-                fd.write(build_config(scenario, "ada", role="hub"))
+            _write_cfg(hub_cfg, scenario, "ada", role="hub")
             # The hub is the process that is watched (proc); uxas_ada is a
             # client which may legitimately exit early when it has no
             # services to host.
-            proc = subprocess.Popen(
-                [os.path.abspath(hub_binary), "-cfgPath", hub_cfg],
-                stdout=out, stderr=subprocess.STDOUT,
-                cwd=workdir or tmp)
+            proc = _spawn(hub_binary, hub_cfg, out, workdir or tmp)
         else:
-            proc = subprocess.Popen(
-                [os.path.abspath(binary), "-cfgPath", cfg]
-                + list(extra_args or []),
-                stdout=out, stderr=subprocess.STDOUT,
-                cwd=workdir or tmp)
+            proc = _spawn(binary, cfg, out, workdir or tmp, extra_args)
         ctx = zmq.Context()
         sub = ctx.socket(zmq.SUB)
         push = ctx.socket(zmq.PUSH)
@@ -121,11 +123,7 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
                 # Give the hub time to bind before the Ada client connects.
                 _drain(poller, sub, time.monotonic() + min(settle_delay, 1.0),
                        None, proc, 0.0)
-                worker = subprocess.Popen(
-                    [os.path.abspath(binary), "-cfgPath", cfg]
-                    + list(extra_args or []),
-                    stdout=out, stderr=subprocess.STDOUT,
-                    cwd=workdir or tmp)
+                worker = _spawn(binary, cfg, out, workdir or tmp, extra_args)
             # Settle: let the binary bind its sockets and services start.
             # Messages received here are discarded (startup chatter).
             _drain(poller, sub, time.monotonic() + settle_delay, None,
