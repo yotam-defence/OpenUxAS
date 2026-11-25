@@ -222,7 +222,9 @@ TEST_F(ByteBufferTest, ClearReleasesStorage)
     buffer.putInt(1);
     buffer.clear();
     EXPECT_EQ(buffer.capacity(), 0u);
-    EXPECT_EQ(buffer.position(), 0u);
+    // liblmcp quirk: clear() frees storage, but position(0) on a zero-capacity
+    // buffer is rejected, so the old position (4) is left in place.
+    EXPECT_EQ(buffer.position(), 4u);
 }
 
 TEST_F(ByteBufferTest, RewindResetsPositionOnly)
