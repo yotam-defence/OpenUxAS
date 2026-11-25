@@ -14,6 +14,7 @@
 
 #include "stdUniquePtr.h"
 
+#include <sqlite3.h>
 #include <iostream>
 
 namespace uxas

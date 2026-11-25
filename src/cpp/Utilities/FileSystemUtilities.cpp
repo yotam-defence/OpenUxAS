@@ -24,6 +24,8 @@
 //BOOST FILESYSTEM
 #include "boost/filesystem/fstream.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/directory.hpp"
+#include "boost/filesystem/exception.hpp"
 #include "boost/regex.hpp"
 
 #include <fstream>      //std::ofstream

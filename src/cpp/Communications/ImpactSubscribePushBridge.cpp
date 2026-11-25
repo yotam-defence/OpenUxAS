@@ -71,7 +71,7 @@ ImpactSubscribePushBridge::configure(const pugi::xml_node& bridgeXmlNode)
     if (!bridgeXmlNode.attribute(STRING_XML_EXTERNAL_ENTITY_ID).empty())
     {
         // set external ID from configuration, falling back to local ID if parse fails
-        m_externalID = bridgeXmlNode.attribute(STRING_XML_EXTERNAL_ENTITY_ID).as_int64(m_entityId);
+        m_externalID = bridgeXmlNode.attribute(STRING_XML_EXTERNAL_ENTITY_ID).as_llong(m_entityId);
         UXAS_LOG_INFORM(s_typeName(), "::configure setting external ID to ", m_externalID, " from XML configuration");
     }
     else

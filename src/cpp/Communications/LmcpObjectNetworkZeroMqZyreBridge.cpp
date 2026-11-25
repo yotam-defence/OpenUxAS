@@ -34,7 +34,6 @@
 #elif (!defined(WIN32))
 #include <unistd.h>
 #include <sys/select.h>
-#include <termio.h>
 #endif
 
 #include <cstdint>

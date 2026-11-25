@@ -80,7 +80,7 @@ def run_implementation(scenario: Scenario, impl: str, binary: str,
             fd.write(build_config(scenario, impl))
         out = open(os.path.join(tmp, "stdout.log"), "wb")
         proc = subprocess.Popen(
-            [binary, "-cfgPath", cfg] + list(extra_args or []),
+            [os.path.abspath(binary), "-cfgPath", cfg] + list(extra_args or []),
             stdout=out, stderr=subprocess.STDOUT,
             cwd=workdir or tmp)
         ctx = zmq.Context()

@@ -72,15 +72,19 @@ endif
 ifeq ($(ENABLE_COVERAGE),true)
     CXX_FLAGS+=-fprofile-arcs -ftest-coverage -DGCOV_MODE=1
 endif
+# boost_system is header-only stub since 1.69 and the library was removed in 1.89;
+# link it only when present.
+BOOST_SYSTEM_LIB:=$(shell echo "int main(){}" | $(CXX_BIN) -x c++ - -lboost_system -o /dev/null 2>/dev/null && echo -lboost_system)
+
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
     LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
--lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
+-lboost_regex -lboost_date_time $(BOOST_SYSTEM_LIB) -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
     LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
--lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
+-lboost_regex -lboost_date_time $(BOOST_SYSTEM_LIB) -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
 
@@ -198,9 +202,10 @@ $(OBJECT_DIR)/unit_tests: $(UNIT_TEST_OBJECTS)
 
 unit-tests: $(OBJECT_DIR)/unit_tests
 
-test: unit-tests diff-smoke
+test: unit-tests
 	@echo "[Run unit tests]"
 	$(OBJECT_DIR)/unit_tests
+	$(MAKE) diff-smoke
 
 # Smoke differential run (C++ uxas vs. Ada golden, or live Ada if ADA_BIN set)
 diff-smoke: $(OBJECT_DIR)/uxas
