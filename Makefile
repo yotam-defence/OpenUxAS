@@ -198,11 +198,17 @@ $(OBJECT_DIR)/unit_tests: $(UNIT_TEST_OBJECTS)
 
 unit-tests: $(OBJECT_DIR)/unit_tests
 
-test: unit-tests
+test: unit-tests diff-smoke
 	@echo "[Run unit tests]"
 	$(OBJECT_DIR)/unit_tests
 
-.PHONY: help clean all test unit-tests
+# Smoke differential run (C++ uxas vs. Ada golden, or live Ada if ADA_BIN set)
+diff-smoke: $(OBJECT_DIR)/uxas
+	@echo "[Run smoke differential harness]"
+	tests/cpp/run-diff --cpp-bin $(OBJECT_DIR)/uxas --scenario smoke_heartbeat \
+	    $(if $(ADA_BIN),--ada-bin $(ADA_BIN),--reference golden)
+
+.PHONY: help clean all test unit-tests diff-smoke
 
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
