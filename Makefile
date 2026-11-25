@@ -47,10 +47,12 @@ SOURCE_DIRS:=$(SOURCE_DIR)/Communications \
 	  	     resources/AutomationDiagramDataService
 
 # Compiler to be used - note the prefixed anod env here
-CXX=$(ANODENV)g++
+# CXX_BIN selects the compiler driver (g++ or clang++)
+CXX_BIN?=g++
+CXX=$(ANODENV)$(CXX_BIN)
 
 # Default C++ compilation flags
-CXX_FLAGS:=-fPIC -std=c++11
+CXX_FLAGS:=-fPIC -std=c++17
 
 # Note: we suppress boost deprecation warnings because they are triggering only
 #       on boost-internal headers.
@@ -73,11 +75,11 @@ endif
 
 # Linker flags
 ifeq ($(PLATFORM),linux)
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -luuid -lserial -lzmq -ldl -lpthread -static-libstdc++ -static-libgcc
 else
-    LINKER_FLAGS:=-std=c++11 -llmcp -lzyre -lpugixml -lboost_filesystem \
+    LINKER_FLAGS:=-std=c++17 -llmcp -lzyre -lpugixml -lboost_filesystem \
 -lboost_regex -lboost_date_time -lboost_system -lSQLiteCpp -lsqlite3 \
 -lczmq -lserial -lzmq -ldl -lpthread
 endif
@@ -105,13 +107,13 @@ define COMPILE_CXX
 @mkdir -p `dirname $1`
 @echo "[Compiling $2]"
 @if test "$(DEBUG_BUILD)" = "true"; then \
-    echo "$(CXX) $(CXX_FLAGS) $(INCLUDES) -MM -MT $1 $2 -MF $1.d"; \
+    echo "$(CXX) $(CXX_FLAGS) $(INCLUDES) $3 -MM -MT $1 $2 -MF $1.d"; \
  fi
-@$(CXX) $(CXX_FLAGS) $(INCLUDES) -MM -MT $1 $2 -MF $1.d
+@$(CXX) $(CXX_FLAGS) $(INCLUDES) $3 -MM -MT $1 $2 -MF $1.d
 @if test "$(DEBUG_BUILD)" = "true"; then \
-    echo "$(CXX) -c $2 $(INCLUDES) $(CXX_FLAGS) -o $1"; \
+    echo "$(CXX) -c $2 $(INCLUDES) $3 $(CXX_FLAGS) -o $1"; \
  fi
-@$(CXX) -c $2 $(INCLUDES) $(CXX_FLAGS) -o $1
+@$(CXX) -c $2 $(INCLUDES) $3 $(CXX_FLAGS) -o $1
 endef
 
 # GENERATE_COMPILER_RULE(object_file, source_file)
@@ -125,6 +127,22 @@ $(OBJECT_DIR)/$1: $2
 
 endef
 
+# Unit tests (GoogleTest). GoogleTest is expected as a system package
+# (libgtest-dev). Override with GTEST_DIR (prefix containing include/ and lib/)
+# and/or GTEST_LIBS (full linker flags).
+UNIT_TEST_DIR:=tests/cpp/unit
+UNIT_TEST_SOURCES:=$(wildcard $(UNIT_TEST_DIR)/*.cpp)
+UNIT_TEST_EXTRA_SOURCES:=
+UNIT_TEST_LIBS:=-llmcp
+UNIT_TEST_OBJECTS:=$(patsubst %.cpp,$(OBJECT_DIR)/%.o,$(UNIT_TEST_SOURCES) $(UNIT_TEST_EXTRA_SOURCES))
+GTEST_DIR?=
+ifneq ($(GTEST_DIR),)
+    GTEST_INCLUDES:=-I$(GTEST_DIR)/include
+    GTEST_LIB_PATH:=-L$(GTEST_DIR)/lib
+endif
+GTEST_LIBS?=$(GTEST_LIB_PATH) -lgtest -lgtest_main
+UNIT_TEST_DEPS:=$(patsubst %.o,%.o.d,$(UNIT_TEST_OBJECTS))
+
 # Toplevel targets
 help:
 	@echo "This makefile compiles the uxas main executable"
@@ -135,6 +153,8 @@ help:
 	@echo
 	@echo "Available targets:"
 	@echo "   all:   Compile the project"
+	@echo "   test:  Build and run the GoogleTest unit tests (tests/cpp/unit)"
+	@echo "   unit-tests: Build the unit test executable without running it"
 	@echo "   clean: Clean all build artefacts"
 	@echo "   help:  This target"
 	@echo
@@ -143,13 +163,16 @@ help:
 	@echo "   OBJECT_DIR: root directory containing objects and executable (default: 'obj')"
 	@echo "   ENABLE_WARNINGS: if 'true' enable all C++ warnings"
 	@echo "   ENABLE_COVERAGE: if 'true' compile uxas with gcov enabled"
+	@echo "   GTEST_DIR: GoogleTest prefix (include/ and lib/); default: system install (libgtest-dev)"
+	@echo "   GTEST_LIBS: GoogleTest linker flags (default: -lgtest -lgtest_main)"
 
 clean:
 	@echo "[Remove objects]"
 	rm -f $(OBJECTS)
 	rm -rf $(OBJECT_DIR)/uxas
+	rm -f $(OBJECT_DIR)/unit_tests $(UNIT_TEST_OBJECTS)
 	@echo "[Remove makefile fragments (dependencies)]"
-	rm -f $(DEPS)
+	rm -f $(DEPS) $(UNIT_TEST_DEPS)
 
 all: $(OBJECT_DIR)/uxas
 	@echo "[Project compiled]"
@@ -162,8 +185,27 @@ $(OBJECT_DIR)/uxas: $(OBJECT_DIR)/uxas.o $(OBJECTS)
 	@echo "[Link uxas main]"
 	@$(CXX) -o $@ $^ $(LINKER_FLAGS) $(CXX_FLAGS)
 
+# Unit tests: only the unit test sources are compiled (no services needed)
+$(OBJECT_DIR)/$(UNIT_TEST_DIR)/%.o: $(UNIT_TEST_DIR)/%.cpp
+	$(call COMPILE_CXX,$@,$<,$(GTEST_INCLUDES))
+
+$(OBJECT_DIR)/$(SOURCE_DIR)/%.o: $(SOURCE_DIR)/%.cpp
+	$(call COMPILE_CXX,$@,$<)
+
+$(OBJECT_DIR)/unit_tests: $(UNIT_TEST_OBJECTS)
+	@echo "[Link unit_tests]"
+	@$(CXX) -o $@ $^ $(GTEST_LIBS) $(UNIT_TEST_LIBS) -lpthread $(CXX_FLAGS)
+
+unit-tests: $(OBJECT_DIR)/unit_tests
+
+test: unit-tests
+	@echo "[Run unit tests]"
+	$(OBJECT_DIR)/unit_tests
+
+.PHONY: help clean all test unit-tests
+
 # Create a compilation rule for each source found
 $(foreach object, $(OBJECTS_BASE), $(eval $(call GENERATE_COMPILE_RULE,$(object),$(patsubst %.o,%.cpp, $(object)))))
 
 # Include the Makefile fragments containing the dependencies
--include $(DEPS)
+-include $(DEPS) $(UNIT_TEST_DEPS)

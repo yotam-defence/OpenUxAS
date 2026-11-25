@@ -78,3 +78,14 @@ uxas-ada
 tests/cpp/log
 tests/cpp/results
 tests/proof/out
+
+# unit test build outputs
+obj/
+
+# python
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
