@@ -70,6 +70,19 @@ jobs:
                   cd OpenUxAS
                   ./anod -v build ${{ matrix.component }} --qualifier=${{ matrix.qualifier}}
 
+            - name: Smoke test uxas --version/--help
+              run: |
+                  cd OpenUxAS
+                  eval "$( ./anod printenv uxas --qualifier=${{ matrix.qualifier }} )"
+                  uxas --version | grep -q "VERSION: 3.2.0"
+                  uxas -version  | grep -q "CMASI:"
+                  uxas --help    | grep -q "^Usage:"
+                  uxas -help     | grep -q "^Usage:"
+                  # version/help must exit 0 without starting the engine
+                  uxas --version >/dev/null && uxas --help >/dev/null
+                  # an unrecognized argument must fail
+                  ! uxas --bogus
+
             - name: Run GoogleTest suite (GCC)
               run: |
                   cd OpenUxAS
